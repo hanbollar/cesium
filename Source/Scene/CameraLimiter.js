@@ -73,7 +73,12 @@ define([
      */
     function CameraLimiter() {
 
-        this.boundingObject = undefined;
+        this.boundingObject = {
+            axisAligned : undefined,
+            boundingRectangle : undefined,
+            boundingSphere : undefined,
+            orientedBoundingBox : undefined
+        };
         this.coordinateLimits = {
             minLatitude : undefined,
             maxLatitude : undefined,
@@ -93,7 +98,50 @@ define([
 
     };
 
+    // positiontocheck is carteisan 3
     CameraLimiter.prototype.withinBoundingObject = function(positionToCheck) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(positionToCheck) ||!defined(positionToCheck.x) || !defined(positionToCheck.y) || !defined(positionToCheck.z)) {
+            throw new DeveloperError('positionToCheck, x, y, and z are required.');
+        }
+        //>>includeEnd('debug');
+
+        return (!defined(this.boundingObject)) ? true : this.withinAllBounds(positionToCheck);
+    };
+
+    CameraLimiter.prototype._withinAllBounds = function(positionToCheck) {
+        var within = true;
+        if (defined(this.axisAligned)) {
+            within &= this._withinAxisAligned(positionToCheck);
+        }
+        if (defined(this.boundingRectangle)) {
+            
+        }
+
+    }
+
+    CameraLimiter.prototype._withinAxisAligned = function(positionToCheck) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(this.axisAligned.minimum) || !defined(this.axisAligned.maximum) || !defined(this.axisAligned.center)) {
+            throw new DeveloperError('min, max, and center are required.');
+        }
+        //>>includeEnd('debug');
+
+        var positionVsAxisMinimumCheck = positionToCheck - this.axisAligned.minimum;
+        var positionVsAxisMaximumCheck = this.axisAligned.maximum - positionToCheck;
+        return (positionVsAxisMinimumCheck.x > 0 && positionVsAxisMinimumCheck.y > 0 && positionVsAxisMinimumCheck.z > 0)
+               && (positionVsAxisMaximumCheck.x > 0 && positionVsAxisMaximumCheck.y > 0 && positionVsAxisMaximumCheck.z > 0);
+    };
+
+    CameraLimiter.prototype._withinboundingRectangle = function(positionToCheck) {
+
+    };
+
+    CameraLimiter.prototype._withinBoundingSphere = function(positionToCheck) {
+
+    };
+
+    CameraLimiter.prototype._withinOrientedBoundingBox = function(positionToCheck) {
 
     };
 
