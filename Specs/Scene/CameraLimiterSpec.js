@@ -111,18 +111,72 @@
 
      // withinAllBoundingObjects -
 
-        // throws if no bounding objects exist
+        // throws if no bounding objects are defined
         // if axisAligned is defined calls the withinAxisAligned with parameter positionToCheck
         // if boundingRectangle is defined calls withinBoundingRectangle with parameter positionToCheck
         // if boundingSphere is defined calls withinBoundingSphere with parameter positionToCheck
         // if orientedBoundingBox is defined calls withinOrientedBoundingBox with parameter positionToCheck
-        // if
+        // if any of the bounding boxes are defined and the inputted Cartesian3 is within them returns true
+        // if any of the bounding boxes are defined and the inputted Cartesian3 is not within any of them returns true
+        // if any of the bounding boxes are defined and the inputted Cartesian3 is not within one but is within another returns false
 
-     // withinAtLeastOneBoundingObject -
+     // withinAtLeastOneBoundingObjects -
+
+        // throws if no bounding objects are defined
+         // if axisAligned is defined calls the withinAxisAligned with parameter positionToCheck
+         // if boundingRectangle is defined calls withinBoundingRectangle with parameter positionToCheck
+         // if boundingSphere is defined calls withinBoundingSphere with parameter positionToCheck
+         // if orientedBoundingBox is defined calls withinOrientedBoundingBox with parameter positionToCheck
+         // if any of the bounding boxes are defined and the inputted Cartesian3 is within them returns true
+         // if any of the bounding boxes are defined and the inputted Cartesian3 is not within any of them returns true
+         // if any of the bounding boxes are defined and the inputted Cartesian3 is not within one but is within another returns true
+
      // withinAxisAligned -
+
+        // throws if axisAligned is not defined
+        // throws if axisAligned minimum does not exist
+        // throws if axisAligned maximum does not exist
+        // throws if axisAligned center does not exist
+        // returns true if position is valid inside of bounds for all components
+        // returns true if position is valid inside of bounds for just the x component
+        // returns true if position is valid inside of bounds for just the y component
+        // returns true if position is valid inside of bounds for just the z component
+        // returns false if position is not valid inside of bounds for any component
+
      // withinBoundingRectangle -
+
+        // throws if boundingRectangle is not defined
+        // throws if boundingRectangle.x does not exist
+        // throws if boundingRectangle.y does not exist
+        // throws if boundingRectangle.width does not exist
+        // throws if boundingRectangle.height does not exist
+        // returns false if position is valid inside of bounds for just the x component
+        // returns false if position is valid inside of bounds for just the y component
+        // returns true if position is valid inside of bounds for all components
+        // returns false if position is not valid inside of bounds for any component
+
      // withinBoundingSphere -
+
+        // throws if boundingSphere is not defined
+        // throws if boundingSphere.radius is not defined
+        // throws if boundingSphere.center is not defined
+        // returns false if position is valid inside of bounds for just the x component
+        // returns false if position is valid inside of bounds for just the y component
+        // returns false if position is valid inside of bounds for just the z component
+        // returns true if position is valid inside of bounds for all components
+        // returns false if position is not valid inside of bounds for any component
+
      // withinOrientedBoundingBox -
+
+         // throws if orientedBoundingBox is not defined
+         // throws if orientedBoundingBox.center is not defined
+         // throws if orientedBoundingBox.halfAxes is not defined
+         // returns false if position is valid inside of bounds for just the x component
+         // returns false if position is valid inside of bounds for just the y component
+         // returns false if position is valid inside of bounds for just the z component
+         // returns true if position is valid inside of bounds for all components
+         // returns false if position is not valid inside of bounds for any component
+
      // withinCoordinateLimits -
      // _withinLongitude -
      // _withinLatitude -

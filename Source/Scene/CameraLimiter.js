@@ -59,6 +59,8 @@ define([
      */
     function CameraLimiter() {
         this.boundingObject = {
+            // generic bounding volume
+
             /**
              * The AxisAligned Bounding Object for the limiter
              *
