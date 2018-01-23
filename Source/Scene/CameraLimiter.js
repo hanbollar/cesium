@@ -98,32 +98,88 @@ define([
 
     };
 
-    // positiontocheck is carteisan 3
-    CameraLimiter.prototype.withinBoundingObject = function(positionToCheck) {
+    CameraLimiter.prototype.withinAllBoundingObjects = function(positionToCheck) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(positionToCheck) ||!defined(positionToCheck.x) || !defined(positionToCheck.y) || !defined(positionToCheck.z)) {
-            throw new DeveloperError('positionToCheck, x, y, and z are required.');
+        if (!defined(positionToCheck)) {
+            throw new DeveloperError('positionToCheck is required.');
+        }
+        if (!defined(positionToCheck.x)) {
+            throw new DeveloperError('x is required.');
+        }
+        if (!defined(positionToCheck.y)) {
+            throw new DeveloperError('y is required.');
+        }
+        if (!defined(positionToCheck.z)) {
+            throw new DeveloperError('z is required.');
+        }
+        if (!defined(this.boundingObject.axisAligned) && !defined(this.boundingObject.boundingRectangle)
+            && !defined(this.boundingObject.boundingSphere) && !defined(this.boundingObject.orientedBoundingSphere)) {
+            throw new DeveloperError('at least one bounding object required');
         }
         //>>includeEnd('debug');
 
-        return (!defined(this.boundingObject)) ? true : this.withinAllBounds(positionToCheck);
-    };
-
-    CameraLimiter.prototype._withinAllBounds = function(positionToCheck) {
         var within = true;
         if (defined(this.axisAligned)) {
-            within &= this._withinAxisAligned(positionToCheck);
+            within &= this.withinAxisAligned(positionToCheck);
         }
         if (defined(this.boundingRectangle)) {
-            
+            within &= this.withinBoundingRectangle(positionToCheck);
         }
-
+        if (defined(this.boundingSphere)) {
+            within &= this.withinBoundingSphere(positionToCheck);
+        }
+        if (defined(this.orientedBoundingBox)) {
+            within &= this.withinOrientedBoundingBox(positionToCheck);
+        }
+        return within;
     }
 
-    CameraLimiter.prototype._withinAxisAligned = function(positionToCheck) {
+    CameraLimiter.prototype.withinAtLeastOneBoundingObject = function(positionToCheck) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(this.axisAligned.minimum) || !defined(this.axisAligned.maximum) || !defined(this.axisAligned.center)) {
-            throw new DeveloperError('min, max, and center are required.');
+        if (!defined(positionToCheck)) {
+            throw new DeveloperError('positionToCheck is required.');
+        }
+        if (!defined(positionToCheck.x)) {
+            throw new DeveloperError('x is required.');
+        }
+        if (!defined(positionToCheck.y)) {
+            throw new DeveloperError('y is required.');
+        }
+        if (!defined(positionToCheck.z)) {
+            throw new DeveloperError('z is required.');
+        }
+        if (!defined(this.boundingObject.axisAligned) && !defined(this.boundingObject.boundingRectangle)
+            && !defined(this.boundingObject.boundingSphere) && !defined(this.boundingObject.orientedBoundingSphere)) {
+            throw new DeveloperError('at least one bounding object required');
+        }
+        //>>includeEnd('debug');
+
+        var within = true;
+        if (defined(this.axisAligned)) {
+            within |= this.withinAxisAligned(positionToCheck);
+        }
+        if (defined(this.boundingRectangle)) {
+            within |= this.withinBoundingRectangle(positionToCheck);
+        }
+        if (defined(this.boundingSphere)) {
+            within |= this.withinBoundingSphere(positionToCheck);
+        }
+        if (defined(this.orientedBoundingBox)) {
+            within |= this.withinOrientedBoundingBox(positionToCheck);
+        }
+        return within;
+    }
+
+    CameraLimiter.prototype.withinAxisAligned = function(positionToCheck) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(this.axisAligned.minimum)) {
+            throw new DeveloperError('minimum of axisAligned bounding box is required.');
+        }
+        if (!defined(this.axisAligned.maximum)) {
+            throw new DeveloperError('maximum of axisAligned bounding box is required.');
+        }
+        if (!defined(this.axisAligned.center)){
+            throw new DeveloperError('center of axisAligned bounding box is required.');
         }
         //>>includeEnd('debug');
 
@@ -133,15 +189,15 @@ define([
                && (positionVsAxisMaximumCheck.x > 0 && positionVsAxisMaximumCheck.y > 0 && positionVsAxisMaximumCheck.z > 0);
     };
 
-    CameraLimiter.prototype._withinboundingRectangle = function(positionToCheck) {
+    CameraLimiter.prototype.withinBoundingRectangle = function(positionToCheck) {
 
     };
 
-    CameraLimiter.prototype._withinBoundingSphere = function(positionToCheck) {
+    CameraLimiter.prototype.withinBoundingSphere = function(positionToCheck) {
 
     };
 
-    CameraLimiter.prototype._withinOrientedBoundingBox = function(positionToCheck) {
+    CameraLimiter.prototype.withinOrientedBoundingBox = function(positionToCheck) {
 
     };
 
