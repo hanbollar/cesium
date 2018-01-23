@@ -78,7 +78,6 @@ define([
      * @constructor
      */
     function CameraLimiter() {
-
         this.boundingObject = {
             axisAligned : undefined,
             boundingRectangle : undefined,
@@ -93,16 +92,9 @@ define([
         };
         this.headingPitchRollLimits = {
             minHeadingPitchRoll : undefined,
-            maxHeadingPitchRoll : undefined,
-            minHeading : undefined,
-            maxHeading : undefined,
-            minPitch : undefined,
-            maxPitch : undefined,
-            minRoll : undefined,
-            maxRoll : undefined
+            maxHeadingPitchRoll : undefined
         };
-
-    };
+    }
 
     /**
      * @private
@@ -121,7 +113,7 @@ define([
             throw new DeveloperError('z is required.');
         }
         return true;
-    }
+    };
 
     /**
      * Checks if the inputted Cartesian3 is within every bounding object used for this limiter.
@@ -136,10 +128,9 @@ define([
      * @returns {Boolean} <code>true</code> if the positionToCheck is within all bounding objects.
      */
     CameraLimiter.prototype.withinAllBoundingObjects = function(positionToCheck) {
-        this._positionAndElementsDefined(positionToCheck);
         //>>includeStart('debug', pragmas.debug);
         if (!defined(this.boundingObject.axisAligned) && !defined(this.boundingObject.boundingRectangle)
-            && !defined(this.boundingObject.boundingSphere) && !defined(this.boundingObject.orientedBoundingSphere)) {
+            && !defined(this.boundingObject.boundingSphere) && !defined(this.boundingObject.orientedBoundingBox)) {
             throw new DeveloperError('at least one bounding object required');
         }
         //>>includeEnd('debug');
@@ -159,7 +150,7 @@ define([
         }
 
         return within;
-    }
+    };
 
     /**
      * Checks if the inputted Cartesian3 is within at least one bounding object used for this limiter.
@@ -173,7 +164,6 @@ define([
      * @returns {Boolean} <code>true</code> if the positionToCheck is within at least one of the bounding objects.
      */
     CameraLimiter.prototype.withinAtLeastOneBoundingObject = function(positionToCheck) {
-        this._positionAndElementsDefined(positionToCheck);
         //>>includeStart('debug', pragmas.debug);
         if (!defined(this.boundingObject.axisAligned) && !defined(this.boundingObject.boundingRectangle)
             && !defined(this.boundingObject.boundingSphere) && !defined(this.boundingObject.orientedBoundingSphere)) {
@@ -196,7 +186,7 @@ define([
         }
 
         return within;
-    }
+    };
 
     /**
      * Checks if the inputted Cartesian3 is within the {@link AxisAlignedBoundingBox} defined for this limiter.
@@ -322,10 +312,10 @@ define([
         //>>includeEnd('debug');
 
         // convert world space positionToCheck to orientedBoundingBox's object space.
-        var inverseTransformationMatrix;
         if (this.boundingSphere.halfAxes.equals(Matrix3.ZERO)) {
             return false;
         }
+        var inverseTransformationMatrix = Matrix3.IDENTITY;
         Matrix3.inverse(this.boundingSphere.halfAxes, inverseTransformationMatrix);
         var positionInObjectSpace = inverseTransformationMatrix * positionToCheck;
 
@@ -339,43 +329,165 @@ define([
                && (positionVsAxisMaximumCheck.x >= 0 && positionVsAxisMaximumCheck.y >= 0 && positionVsAxisMaximumCheck.z >= 0);
     };
 
-    CameraLimiter.prototype.withinCoordinateLimits = function(coordinateToCheck) {
-
+    /**
+     * Checks if the inputted longitude and latitude values are within the minimum and maximum longitude and latitude values defined for this limiter.
+     * <code>true</code> if the inputted longitude and latitude values are within the limiter,
+     * <code>false</code> otherwise.
+     *
+     * @param {Number} [latitudeToCheck] The number corresponding to the latitude location being checked
+     * @param {Number} [longitudeToCheck] The number corresponding to the longitude location being checked
+     * @returns {Boolean} <code>true</code> if the longitudeToCheck and latitudeToCheck are within the longitudes and latitudes defined for this limiter.
+     */
+    CameraLimiter.prototype.withinCoordinateLimits = function(longitudeToCheck, latitudeToCheck) {
+        return (this.withinLongitude(longitudeToCheck) && this.withinLatitude(latitudeToCheck));
     };
 
+    /**
+     * Checks if the inputted longitude value is within the minimum and maximum longitude values defined for this limiter.
+     * <code>true</code> if the inputted longitude is within the limiter,
+     * <code>false</code> otherwise.
+     *
+     * @param {Number} [longitudeToCheck] The number corresponding to the longitude location being checked
+     * @returns {Boolean} <code>true</code> if the longitudeToCheck is within the longitudes defined for this limiter.
+     */
+    CameraLimiter.prototype.withinLongitude = function(longitudeToCheck) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(longitudeToCheck)) {
+            throw new DeveloperError('longitudeToCheck is required.');
+        }
+        if (!defined(this.coordinateLimits.minLongitude)) {
+            throw new DeveloperError('minLongitude is required.');
+        }
+        if (!defined(this.coordinateLimits.maxLongitude)) {
+            throw new DeveloperError('maxLongitude is required.');
+        }
+        //>>includeEnd('debug');
+
+        return (longitudeToCheck >= this.coordinateLimits.minLongitude && longitudeToCheck <= this.coordinateLimits.maxLongitude);
+    };
+
+    /**
+     * Checks if the inputted latitude value is within the minimum and maximum latitude values defined for this limiter.
+     * <code>true</code> if the inputted latitude is within the limiter,
+     * <code>false</code> otherwise.
+     *
+     * @param {Number} [latitudeToCheck] The number corresponding to the latitude location being checked
+     * @returns {Boolean} <code>true</code> if the latitudeToCheck is within the latitudes defined for this limiter.
+     */
+    CameraLimiter.prototype.withinLatitude = function(latitudeToCheck) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(latitudeToCheck)) {
+            throw new DeveloperError('latitudeToCheck is required.');
+        }
+        if (!defined(this.coordinateLimits.minLatitude)) {
+            throw new DeveloperError('minLatitude is required.');
+        }
+        if (!defined(this.coordinateLimits.maxLatitude)) {
+            throw new DeveloperError('maxLatitude is required.');
+        }
+        //>>includeEnd('debug');
+
+        return (latitudeToCheck >= this.coordinateLimits.minLatitude && latitudeToCheck <= this.coordinateLimits.maxLatitude);
+    };
+
+    /**
+     * Checks if the inputted {@link HeadingPitchRoll} is within the minimum and maximum {@link HeadingPitchRoll} values defined for this limiter.
+     * <code>true</code> if the inputted {@link HeadingPitchRoll} is within the {@link HeadingPitchRoll} values for this limiter,
+     * <code>false</code> otherwise.
+     *
+     * @param {HeadingPitchRoll} [headingPitchRollToCheck] Corresponds to the @link HeadingPitchRoll} being checked
+     * @returns {Boolean} <code>true</code> if the {@link HeadingPitchRoll} is within the {@link HeadingPitchRoll} values defined for this limiter.
+     */
     CameraLimiter.prototype.withinHeadingPitchRollLimits = function(headingPitchRollToCheck) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(headingPitchRollToCheck)) {
+            throw new DeveloperError('headingPitchRollToCheck is required.');
+        }
+        //>>includeEnd('debug');
 
+        return (this.withinHeadingLimits(headingPitchRollToCheck.heading)
+                && this.withinPitchLimits(headingPitchRollToCheck.pitch)
+                && this.withinRollLimits(headingPitchRollToCheck.roll)
+        );
     };
 
+    /**
+     * Checks if the inputted heading is within the minimum and maximum heading values defined for this limiter.
+     * <code>true</code> if the inputted heading is within the heading values for this limiter,
+     * <code>false</code> otherwise.
+     *
+     * @param {Number} [headingToCheck] Corresponds to the heading being checked
+     * @returns {Boolean} <code>true</code> if the inputted heading is within the heading values defined for this limiter.
+     */
     CameraLimiter.prototype.withinHeadingLimits = function(headingToCheck) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(headingToCheck)) {
+            throw new DeveloperError('headingToCheck is required.');
+        }
+        if (!defined(this.headingPitchRollLimits.minHeadingPitchRoll.heading)) {
+            throw new DeveloperError('minHeadingPitchRoll.heading is required.');
+        }
+        if (!defined(this.headingPitchRollLimits.maxHeadingPitchRoll.heading)) {
+            throw new DeveloperError('maxHeadingPitchRoll.heading is required.');
+        }
+        //>>includeEnd('debug');
 
+        var limiterMin = this.headingPitchRollLimits.minHeadingPitchRoll;
+        var limiterMax = this.headingPitchRollLimits.maxHeadingPitchRoll;
+        return (headingToCheck >= limiterMin.heading && headingToCheck <= limiterMax.heading);
     };
 
-    CameraLimiter.prototype.withinPitchLimits = function(headingToCheck) {
+    /**
+     * Checks if the inputted pitch is within the minimum and maximum pitch values defined for this limiter.
+     * <code>true</code> if the inputted pitch is within the heading values for this limiter,
+     * <code>false</code> otherwise.
+     *
+     * @param {Number} [pitchToCheck] Corresponds to the pitch being checked
+     * @returns {Boolean} <code>true</code> if the inputted pitch is within the pitch values defined for this limiter.
+     */
+    CameraLimiter.prototype.withinPitchLimits = function(pitchToCheck) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(pitchToCheck)) {
+            throw new DeveloperError('pitchToCheck is required.');
+        }
+        if (!defined(this.headingPitchRollLimits.minHeadingPitchRoll.pitch)) {
+            throw new DeveloperError('minHeadingPitchRoll.pitch is required.');
+        }
+        if (!defined(this.headingPitchRollLimits.maxHeadingPitchRoll.pitch)) {
+            throw new DeveloperError('maxHeadingPitchRoll.pitch is required.');
+        }
+        //>>includeEnd('debug');
 
+        var limiterMin = this.headingPitchRollLimits.minHeadingPitchRoll;
+        var limiterMax = this.headingPitchRollLimits.maxHeadingPitchRoll;
+        return (pitchToCheck >= limiterMin.pitch && pitchToCheck <= limiterMax.pitch);
     };
 
-    CameraLimiter.prototype.withinRollLimits = function(headingToCheck) {
+    /**
+     * Checks if the inputted roll is within the minimum and maximum roll values defined for this limiter.
+     * <code>true</code> if the inputted roll is within the roll values for this limiter,
+     * <code>false</code> otherwise.
+     *
+     * @param {Number} [rollToCheck] Corresponds to the roll being checked
+     * @returns {Boolean} <code>true</code> if the inputted roll is within the roll values defined for this limiter.
+     */
+    CameraLimiter.prototype.withinRollLimits = function(rollToCheck) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(rollToCheck)) {
+            throw new DeveloperError('rollToCheck is required.');
+        }
+        if (!defined(this.headingPitchRollLimits.minHeadingPitchRoll.roll)) {
+            throw new DeveloperError('minHeadingPitchRoll.roll is required.');
+        }
+        if (!defined(this.headingPitchRollLimits.maxHeadingPitchRoll.pitch)) {
+            throw new DeveloperError('maxHeadingPitchRoll.roll is required.');
+        }
+        //>>includeEnd('debug');
 
+        var limiterMin = this.headingPitchRollLimits.minHeadingPitchRoll;
+        var limiterMax = this.headingPitchRollLimits.maxHeadingPitchRoll;
+        return (rollToCheck >= limiterMin.roll && rollToCheck <= limiterMax.roll);
     };
-
-    defineProperties(CameraLimiter.prototype, {
-        /**
-         * Gets the camera's reference frame. The inverse of this transformation is appended to the view matrix.
-         * @memberof Camera.prototype
-         *
-         * @type {Matrix4}
-         * @readonly
-         *
-         * @default {@link Matrix4.IDENTITY}
-         */
-        transform : {
-            get : function() {
-                return this._transform;
-            }
-        },
-
-    });
 
     /**
      * Duplicates this CameraLimiter instance.
@@ -410,10 +522,6 @@ define([
 
         result.headingPitchRollLimits.minHeading = limiter.headingPitchRollLimits.minHeading;
         result.headingPitchRollLimits.maxHeading = limiter.headingPitchRollLimits.maxHeading;
-        result.headingPitchRollLimits.minPitch = limiter.headingPitchRollLimits.minPitch;
-        result.headingPitchRollLimits.maxPitch = limiter.headingPitchRollLimits.maxPitch;
-        result.headingPitchRollLimits.minRoll = limiter.headingPitchRollLimits.minRoll;
-        result.headingPitchRollLimits.maxRoll = limiter.headingPitchRollLimits.maxRoll;
 
         return result;
     };
