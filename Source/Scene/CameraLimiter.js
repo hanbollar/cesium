@@ -326,7 +326,6 @@ define([
         var distanceToCenter = Cartesian3.distance(positionToCheck, this.boundingSphere.center);
 
         return (distanceToCenter.x <= radius && distanceToCenter.y <= radius && distanceToCenter.z <= radius);
-
     };
 
     /**
@@ -496,9 +495,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        var limiterMin = this.headingPitchRollLimits.minimum;
-        var limiterMax = this.headingPitchRollLimits.maximum;
-        return (headingToCheck >= limiterMin.heading && headingToCheck <= limiterMax.heading);
+        return (headingToCheck >= this.headingPitchRollLimits.minimum.heading && headingToCheck <= this.headingPitchRollLimits.heading);
     };
 
     /**
@@ -511,9 +508,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        var limiterMin = this.headingPitchRollLimits.minimum;
-        var limiterMax = this.headingPitchRollLimits.maximum;
-        return (pitchToCheck >= limiterMin.pitch && pitchToCheck <= limiterMax.pitch);
+        return (pitchToCheck >= this.headingPitchRollLimits.minimum.pitch && pitchToCheck <= this.headingPitchRollLimits.maximum.pitch);
     };
 
     /**
@@ -526,9 +521,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        var limiterMin = this.headingPitchRollLimits.minimum;
-        var limiterMax = this.headingPitchRollLimits.maximum;
-        return (rollToCheck >= limiterMin.roll && rollToCheck <= limiterMax.roll);
+        return (rollToCheck >= this.headingPitchRollLimits.minimum.roll && rollToCheck <= this.headingPitchRollLimits.maximum.roll);
     };
 
     /**
