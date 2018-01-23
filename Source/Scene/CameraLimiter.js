@@ -21,17 +21,7 @@ define([
         '../Core/Math',
         '../Core/Matrix3',
         '../Core/Matrix4',
-        '../Core/OrientedBoundingBox',
-        '../Core/OrthographicFrustum',
-        '../Core/OrthographicOffCenterFrustum',
-        '../Core/PerspectiveFrustum',
-        '../Core/Quaternion',
-        '../Core/Ray',
-        '../Core/Rectangle',
-        '../Core/Transforms',
-        './CameraFlightPath',
-        './MapMode2D',
-        './SceneMode'
+        '../Core/OrientedBoundingBox'
     ], function(
         AxisAlignedBoundingBox,
         BoundingRectangle,
@@ -55,17 +45,7 @@ define([
         CesiumMath,
         Matrix3,
         Matrix4,
-        OrientedBoundingBox,
-        OrthographicFrustum,
-        OrthographicOffCenterFrustum,
-        PerspectiveFrustum,
-        Quaternion,
-        Ray,
-        Rectangle,
-        Transforms,
-        CameraFlightPath,
-        MapMode2D,
-        SceneMode) {
+        OrientedBoundingBox) {
     'use strict';
 
     /**
@@ -94,6 +74,18 @@ define([
             minHeadingPitchRoll : undefined,
             maxHeadingPitchRoll : undefined
         };
+    }
+    CameraLimiter.prototype.setHeadingPitchRollLimits(minHeadingPitchRoll, maxHeadingPitchRoll) {
+
+    }
+    CameraLimiter.prototype.setLatitudeLimits(minLatitude, maxLatitude) {
+
+    }
+    CameraLimiter.prototype.setLongitudeLimits(minLongitude, maxLongitude) {
+
+    }
+    CameraLimiter.prototype.setHeadingPitchRollLimits(minHeadingPitchRoll, maxHeadingPitchRoll) {
+
     }
 
     /**
