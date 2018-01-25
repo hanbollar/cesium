@@ -129,13 +129,15 @@ define([
      * GivenConstraints - returns closest valid location to inputted location
      */
     CameraLimiter.prototype.closestLocationTo = function(positionToCheck) {
+
+        // TODO -------- CHECK COMPLETED?????
         if (this.withinBoundingObject(positionToCheck) && this.withinCoordinateLimits(positionToCheck)) {
             return positionToCheck;
         }
 
         // both the below functions return cartographic values
-        var closestToBounding = this._closestLocationToBoundingObject(value);
-        var closestToCoordinates = this._closestLocationToCoordinatesLimits(value);
+        var closestToBounding = this._closestLocationToBoundingObject(positionToCheck);
+        var closestToCoordinates = this._closestLocationToCoordinatesLimits(positionToCheck);
 
         //>>includeStart('debug', pragmas.debug);
         if (!this.withinBoundingObject(closestToBounding)) {
@@ -146,13 +148,24 @@ define([
         }
         //>>includeEnd('debug');
 
+        var value;
+        if (positionToCheck instanceof Cartesian3) {
+            value = positionToCheck;
+        } else if (positionToCheck instanceof Cartographic) {
+            value = Cartesian3.fromRadians(positionToCheck.longitude, positionToCheck.latitude, positionToCheck.height);
+        } else {
+            //>>includeStart('debug', pragmas.debug);
+            throw new DeveloperError('position must be of Cartographic or Cartesian3 types.');
+            //>>includeEnd('debug');
+        }
+
         var closestToBoundingWithinCoordinateLimits = this.withinCoordinateLimits(closestToBounding);
         var closestToCoordinatesWithinBoundingObject = this.withinBoundingObject(closestToCoordinates);
 
         if (closestToBoundingWithinCoordinateLimits && closestToCoordinatesWithinBoundingObject) {
-            var cartesianClosestToBounding = Cartesian3.fromRadians(closestToBounding.longitude, closestToBounding.latitude, closestToBounding.height);
-            var cartesianClosestToCoordinates = Cartesian3.fromRadians(closestToCoordinates.longitude, closestToCoordinates.latitude, closestToCoordinates.height);
-            return (Cartesian3.distance(cartesianClosestToBounding, value) < Cartesian3.distance(cartesianClosestToCoordinates, value)) ? closestToBounding : closestToCoordinates;
+            var c3ClosestToBounding = Cartesian3.fromRadians(closestToBounding.longitude, closestToBounding.latitude, closestToBounding.height);
+            var c3ClosestToCoordinates = Cartesian3.fromRadians(closestToCoordinates.longitude, closestToCoordinates.latitude, closestToCoordinates.height);
+            return (Cartesian3.distance(c3ClosestToBounding, value) < Cartesian3.distance(c3ClosestToCoordinates, value)) ? closestToBounding : closestToCoordinates;
         } else if (closestToBoundingWithinCoordinateLimits && !closestToCoordinatesWithinBoundingObject) {
             return closestToBounding;
         } else if (!closestToBoundingWithinCoordinateLimits && closestToCoordinatesWithinBoundingObject) {
