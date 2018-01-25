@@ -125,6 +125,75 @@ define([
     };
 
     /**
+     * TO FILL INT STILL - TODO-------------------
+     * GivenConstraints - returns closest valid location to inputted location
+     */
+    CameraLimiter.prototype.closestLocationTo = function(positionToCheck) {
+        if (this.withinBoundingObject(positionToCheck) && this.withinCoordinateLimits(positionToCheck)) {
+            return positionToCheck;
+        }
+
+        var closestToBounding = this._closestLocationToBoundingObject(value);
+        var closestToCoordinates = this._closestLocationToCoordinatesLimits(value);
+
+        //>>includeStart('debug', pragmas.debug);
+        if (!this.withinBoundingObject(closestToBounding)) {
+            throw new DeveloperError('closestToBounding should be in the bounding object.');
+        }
+        if (!this.withinCoordinateLimits(closestToCoordinates)) {
+            throw new DeveloperError('closestToCoordinates should be in the coordinate limits');
+        }
+        //>>includeEnd('debug');
+
+        var closestToBoundingWithinCoordinateLimits = this.withinCoordinateLimits(closestToBounding);
+        var closestToCoordinatesWithinBoundingObject = this.withinBoundingObject(closestToCoordinates);
+
+        if (closestToBoundingWithinCoordinateLimits && closestToCoordinatesWithinBoundingObject) {
+            var cartesianClosestToBounding = Cartesian3.fromRadians(closestToBounding.longitude, closestToBounding.latitude, closestToBounding.height);
+            var cartesianClosestToCoordinates = Cartesian3.fromRadians(closestToCoordinates.longitude, closestToCoordinates.latitude, closestToCoordinates.height);
+            return (Cartesian3.distance(cartesianClosestToBounding, value) < Cartesian3.distance(cartesianClosestToCoordinates, value)) ? closestToBounding : closestToCoordinates;
+        } else if (closestToBoundingWithinCoordinateLimits && !closestToCoordinatesWithinBoundingObject) {
+            return closestToBounding;
+        } else if (!closestToBoundingWithinCoordinateLimits && closestToCoordinatesWithinBoundingObject) {
+            return closestToCoordinates;
+        } else {
+            //>>includeStart('debug', pragmas.debug);
+            throw new DeveloperError('(1) Disjointed Constraints: Coordinate Limits and Bounding Object must overlap somewhere.'
+                                     + 'OR (2) Camera was not originally within constraints when Limiter was created');
+            //>>includeEnd('debug');
+        }
+    };
+
+    /**
+     * @private
+     */
+    CameraLimiter.prototype._closestLocationToBoundingObject(position) {
+        // already know the positionToCheck is defined and it's xyz vals are also defined
+
+// TODO ---------------------
+    };
+
+    /**
+     * @private
+     */
+    CameraLimiter.prototype._closestLocationToCoordinatesLimits(position) {
+        // already know the positionToCheck is defined and it's xyz vals are also defined
+
+        // convert to cartographic if needed
+// TODO ---------------------
+
+        if (position.)
+    };
+
+    /**
+     * TO FILL INT STILL - TODO-------------------
+     * GivenConstraints - returns closest valid orientation to inputted orientation
+     */
+    CameraLimiter.prototype.closestOrientationTo = function(orientationToCheck) {
+// TODO ------------------
+    };
+
+    /**
      * @private
      */
     CameraLimiter.prototype._withinAxisAligned = function(positionToCheck) {
