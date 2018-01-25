@@ -257,8 +257,6 @@ define([
         }
         //>>includeEnd('debug');
 
-        this._allLimiterMaxMinPairsMatched();
-
         var value;
         if (valueToCheck instanceof Cartographic) {
             value = valueToCheck;
@@ -267,6 +265,8 @@ define([
         } else {
             throw new DeveloperError('valueToCheck must be only of type Cartesian3 or Cartographic');
         }
+
+        CameraLimiter.allLimiterMaxMinPairsMatched(this);
 
         var minLimits = this.coordinateLimits.minimum;
 
@@ -337,9 +337,12 @@ define([
         if (!defined(valueToCheck)) {
             throw new DeveloperError('headingPitchRollToCheck is required.');
         }
+        if (!(valueToCheck instanceof HeadingPitchRoll)) {
+            throw new DeveloperError('valueToCheck must be of type HeadingPitchRoll.');
+        }
         //>>includeEnd('debug');
 
-        this._allLimiterMaxMinPairsMatched();
+        CameraLimiter.allLimiterMaxMinPairsMatched(this);
 
         var minLimits = this.headingPitchRollLimits.minimum;
 
@@ -398,61 +401,78 @@ define([
     };
 
     /**
+     * Checks if every maximum and minimum defined parameter values for coordinateLimits and for headingPitchRollLimits are defined
+     * s.t. if a parameter is defined in the minimum it must be defined in the maximum and vice versa. The same should hold true for
+     * the undefined case.
+     *
+     * @param {HeadingPitchRoll} [valueToCheck] Corresponds to the @link HeadingPitchRoll} being checked
+     * @returns {Boolean} <code>true</code> if the {@link HeadingPitchRoll} is within the {@link HeadingPitchRoll} values defined for this limiter.
+     */
+    CameraLimiter.allLimiterMaxMinPairsMatched = function() {
+        return CameraLimiter._allLimiterMaxMinPairsMatched(this);
+    }
+
+    /**
      * @private
      */
-    CameraLimiter.prototype._allLimiterMaxMinPairsMatched = function() {
+    CameraLimiter._allLimiterMaxMinPairsMatched = function(limiter) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(this.coordinateLimits.minimum) && defined(this.coordinateLimits.maximum)) {
-            throw new DeveloperError('minimum is required.');
-        }
-        if (!defined(this.coordinateLimits.maximum) && defined(this.coordinateLimits.minimum)) {
-            throw new DeveloperError('maximum is required.');
-        }
-        if (!defined(this.coordinateLimits.minimum.longitude) && defined(this.coordinateLimits.maximum.longitude)) {
-            throw new DeveloperError('minimum.longitude is required.');
-        }
-        if (defined(this.coordinateLimits.minimum.longitude) && !defined(this.coordinateLimits.maximum.longitude)) {
-            throw new DeveloperError('maximum.longitude is required.');
-        }
-        if (!defined(this.coordinateLimits.minimum.latitude) && defined(this.coordinateLimits.maximum.latitude)) {
-            throw new DeveloperError('minimum.latitude is required.');
-        }
-        if (defined(this.coordinateLimits.minimum.latitude) && !defined(this.coordinateLimits.maximum.latitude)) {
-            throw new DeveloperError('maximum.latitude is required.');
-        }
-        if (!defined(this.coordinateLimits.minimum.height) && defined(this.coordinateLimits.maximum.height)) {
-            throw new DeveloperError('minimum.height is required.');
-        }
-        if (defined(this.coordinateLimits.minimum.height) && !defined(this.coordinateLimits.maximum.height)) {
-            throw new DeveloperError('maximum.height is required.');
+        if (!defined(limiter)) {
+            throw new DeveloperError('limiter is required.');
         }
 
-        if (!defined(this.headingPitchRollLimits)) {
-            throw new DeveloperError('headingPitchRollLimits is required.');
+        if (defined(limiter.coordinateLimits)) {
+            if (!defined(limiter.coordinateLimits.minimum) && defined(limiter.coordinateLimits.maximum)) {
+                throw new DeveloperError('minimum is required.');
+            }
+            if (!defined(limiter.coordinateLimits.maximum) && defined(limiter.coordinateLimits.minimum)) {
+                throw new DeveloperError('maximum is required.');
+            }
+            if (!defined(limiter.coordinateLimits.minimum.longitude) && defined(limiter.coordinateLimits.maximum.longitude)) {
+                throw new DeveloperError('minimum.longitude is required.');
+            }
+            if (defined(limiter.coordinateLimits.minimum.longitude) && !defined(limiter.coordinateLimits.maximum.longitude)) {
+                throw new DeveloperError('maximum.longitude is required.');
+            }
+            if (!defined(limiter.coordinateLimits.minimum.latitude) && defined(limiter.coordinateLimits.maximum.latitude)) {
+                throw new DeveloperError('minimum.latitude is required.');
+            }
+            if (defined(limiter.coordinateLimits.minimum.latitude) && !defined(limiter.coordinateLimits.maximum.latitude)) {
+                throw new DeveloperError('maximum.latitude is required.');
+            }
+            if (!defined(limiter.coordinateLimits.minimum.height) && defined(limiter.coordinateLimits.maximum.height)) {
+                throw new DeveloperError('minimum.height is required.');
+            }
+            if (defined(limiter.coordinateLimits.minimum.height) && !defined(limiter.coordinateLimits.maximum.height)) {
+                throw new DeveloperError('maximum.height is required.');
+            }
         }
-        if (!defined(this.headingPitchRollLimits.minimum) && defined(this.headingPitchRollLimits.maximum)) {
-            throw new DeveloperError('minimum is required.');
-        }
-        if (defined(this.headingPitchRollLimits.minimum) && !defined(this.headingPitchRollLimits.maximum)) {
-            throw new DeveloperError('maximum is required.');
-        }
-        if (!defined(this.headingPitchRollLimits.minimum.heading) && defined(this.headingPitchRollLimits.maximum.heading)) {
-            throw new DeveloperError('minimum.heading is required.');
-        }
-        if (defined(this.headingPitchRollLimits.minimum.heading) && !defined(this.headingPitchRollLimits.maximum.heading)) {
-            throw new DeveloperError('maximum.heading is required.');
-        }
-        if (!defined(this.headingPitchRollLimits.minimum.pitch) && defined(this.headingPitchRollLimits.maximum.pitch)) {
-            throw new DeveloperError('minimum.pitch is required.');
-        }
-        if (defined(this.headingPitchRollLimits.minimum.pitch) && !defined(this.headingPitchRollLimits.maximum.pitch)) {
-            throw new DeveloperError('maximum.pitch is required.');
-        }
-        if (!defined(this.headingPitchRollLimits.minimum.roll) && defined(this.headingPitchRollLimits.maximum.roll)) {
-            throw new DeveloperError('minimum.roll is required.');
-        }
-        if (defined(this.headingPitchRollLimits.minimum.roll) && !defined(this.headingPitchRollLimits.maximum.roll)) {
-            throw new DeveloperError('maximum.roll is required.');
+
+        if (defined(limiter.headingPitchRollLimits)) {
+            if (!defined(limiter.headingPitchRollLimits.minimum) && defined(limiter.headingPitchRollLimits.maximum)) {
+                throw new DeveloperError('minimum is required.');
+            }
+            if (defined(limiter.headingPitchRollLimits.minimum) && !defined(limiter.headingPitchRollLimits.maximum)) {
+                throw new DeveloperError('maximum is required.');
+            }
+            if (!defined(limiter.headingPitchRollLimits.minimum.heading) && defined(limiter.headingPitchRollLimits.maximum.heading)) {
+                throw new DeveloperError('minimum.heading is required.');
+            }
+            if (defined(limiter.headingPitchRollLimits.minimum.heading) && !defined(limiter.headingPitchRollLimits.maximum.heading)) {
+                throw new DeveloperError('maximum.heading is required.');
+            }
+            if (!defined(limiter.headingPitchRollLimits.minimum.pitch) && defined(limiter.headingPitchRollLimits.maximum.pitch)) {
+                throw new DeveloperError('minimum.pitch is required.');
+            }
+            if (defined(limiter.headingPitchRollLimits.minimum.pitch) && !defined(limiter.headingPitchRollLimits.maximum.pitch)) {
+                throw new DeveloperError('maximum.pitch is required.');
+            }
+            if (!defined(limiter.headingPitchRollLimits.minimum.roll) && defined(limiter.headingPitchRollLimits.maximum.roll)) {
+                throw new DeveloperError('minimum.roll is required.');
+            }
+            if (defined(limiter.headingPitchRollLimits.minimum.roll) && !defined(limiter.headingPitchRollLimits.maximum.roll)) {
+                throw new DeveloperError('maximum.roll is required.');
+            }
         }
         //>>includeEnd('debug');
 

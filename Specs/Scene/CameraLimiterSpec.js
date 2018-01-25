@@ -54,10 +54,85 @@
 
     });
 
-    // _allLimiterMaxMInPairsMatched -
+     // constructor -
+
+        // creates empty with constraint containers defined but minimum and maximum inner vals are not
+
+     // withinBoundingObject -
+
+        // throws if no bounding objects are defined
+        // throws if position not defined
+        // throws if position defined and x not defined
+        // throws if position defined and y not defined
+        // throws if position defined and z not defined
+        // throws if position defined and all components defined
+        // if bounding object is axisAligned instance calls the withinAxisAligned with parameter positionToCheck
+        // if bounding object is boundingRectangle instance calls withinBoundingRectangle with parameter positionToCheck
+        // if bounding object is boundingSphere instance calls withinBoundingSphere with parameter positionToCheck
+        // if bounding object is orientedBoundingBox instance calls withinOrientedBoundingBox with parameter positionToCheck
+        // if inputted Cartesian3 is within bounding object (axisAligned) returns true
+        // if inputted Cartesian3 is not within the bounding object (axisAligned) returns false
+        // if inputted Cartesian3 is within bounding object (boundingRectangle) returns true
+        // if inputted Cartesian3 is not within the bounding object (boundingRectangle) returns false
+        // if inputted Cartesian3 is within bounding object (boundingSphere) returns true
+        // if inputted Cartesian3 is not within the bounding object (boundingSphere) returns false
+        // if inputted Cartesian3 is within bounding object (orientedBoundingBox) returns true
+        // if inputted Cartesian3 is not within the bounding object (orientedBoundingBox) returns false
+
+     // withinCoordinateLimits -
+
+        // throws if inputted value is not defined
+        // throws if inputted value is not of type Cartographic or Cartesian3
+        // if just longitude is defined, returns true if within longitude limits
+        // if just latitude is defined, returns true if within latitude limits
+        // if just height is defined, returns true if within height limits
+        // if longitude and latitude are defined, returns true if within longitude and latitude limits
+        // if longitude and latitude are defined, returns false if within longitude but not latitude
+        // if longitude and latitude are defined, returns false if not within longitude but within latitude
+        // if longitude and height are defined, returns true if within longitude and height
+        // if longitude and height are defined, returns false if within just longitude
+        // if longitude and height are defined, returns false if within just height
+        // if latitude and height are defined, returns true if within both
+        // if latitude and height are defined, returns false if within just latitude
+        // if latitude and height are defined, returns false if within just height
+        // if longitude latitude and height are defined, returns true if within all three
+        // if longitude latitude and height are defined, returns false if within just longitude and latitude
+        // if longitude latitude and height are defined, returns false if within just latitude and height
+        // if longitude latitude and height are defined, returns false if within just height and longitude
+        // if longitude latitude and height are defined, returns false if within just longitude
+        // if longitude latitude and height are defined, returns false if within just latitude
+        // if longitude latitude and height are defined, returns false if within just height
+        // if longitude latitude and height are defined, returns false if within none
+
+     // withinHeadingPitchRollLimits -
+
+        // throws if inputted value is not defined
+        // throws if inputted value is not of type HeadingPitchRoll
+        // if just heading is defined, returns true if within heading limits
+        // if just pitch is defined, returns true if within pitchroll limits
+        // if just roll is defined, returns true if within roll limits
+        // if heading and pitch are defined, returns true if within heading and pitch limits
+        // if heading and pitch are defined, returns false if within heading but not pitch
+        // if heading and pitch are defined, returns false if not within heading but within pitch
+        // if heading and roll are defined, returns true if within heading and roll
+        // if heading and roll are defined, returns false if within just heading
+        // if heading and roll are defined, returns false if within just roll
+        // if pitch and roll are defined, returns true if within both
+        // if pitch and roll are defined, returns false if within just pitch
+        // if pitch and roll are defined, returns false if within just rollroll
+        // if heading pitch and roll are defined, returns true if within all three
+        // if heading pitch and roll are defined, returns false if within just heading and pitch
+        // if heading pitch and roll are defined, returns false if within just pitch and roll
+        // if heading pitch and roll are defined, returns false if within just roll and heading
+        // if heading pitch and roll are defined, returns false if within just heading
+        // if heading pitch and roll are defined, returns false if within just pitch
+        // if heading pitch and roll are defined, returns false if within just roll
+        // if heading pitch and roll are defined, returns false if within none
+
+     // allLimiterMaxMInPairsMatched -
 
          // coordinateLimits
-        // minimum defined maximum defined
+         // minimum defined maximum defined
          // minimum defined maximum not
          // minimum not maximum defined
          // minimum not maximum not
@@ -92,98 +167,10 @@
          // roll: minimum not maximum defined
          // roll: minimum not maximum not
 
-     // _positionAndElementsDefined -
+     // clone -
 
-        // position not defined
-        // postion defined and x not defined
-        // postion defined and y not defined
-        // postion defined and z not defined
-        // postion defined and all components defined
+         // all items copy over properly if all are defined
+         // all items copy over properly if not all items are defined
 
-    // clone -
-
-        // all items copy over properly if all are defined
-        // all items copy over properly if not all items are defined
-
-     // constructor -
-
-        // creates empty with constraint containers defined but minimum and maximum inner vals are not
-
-     // withinAllBoundingObjects -
-
-        // throws if no bounding objects are defined
-        // if axisAligned is defined calls the withinAxisAligned with parameter positionToCheck
-        // if boundingRectangle is defined calls withinBoundingRectangle with parameter positionToCheck
-        // if boundingSphere is defined calls withinBoundingSphere with parameter positionToCheck
-        // if orientedBoundingBox is defined calls withinOrientedBoundingBox with parameter positionToCheck
-        // if any of the bounding boxes are defined and the inputted Cartesian3 is within them returns true
-        // if any of the bounding boxes are defined and the inputted Cartesian3 is not within any of them returns true
-        // if any of the bounding boxes are defined and the inputted Cartesian3 is not within one but is within another returns false
-
-     // withinAtLeastOneBoundingObjects -
-
-        // throws if no bounding objects are defined
-         // if axisAligned is defined calls the withinAxisAligned with parameter positionToCheck
-         // if boundingRectangle is defined calls withinBoundingRectangle with parameter positionToCheck
-         // if boundingSphere is defined calls withinBoundingSphere with parameter positionToCheck
-         // if orientedBoundingBox is defined calls withinOrientedBoundingBox with parameter positionToCheck
-         // if any of the bounding boxes are defined and the inputted Cartesian3 is within them returns true
-         // if any of the bounding boxes are defined and the inputted Cartesian3 is not within any of them returns true
-         // if any of the bounding boxes are defined and the inputted Cartesian3 is not within one but is within another returns true
-
-     // withinAxisAligned -
-
-        // throws if axisAligned is not defined
-        // throws if axisAligned minimum does not exist
-        // throws if axisAligned maximum does not exist
-        // throws if axisAligned center does not exist
-        // returns true if position is valid inside of bounds for all components
-        // returns true if position is valid inside of bounds for just the x component
-        // returns true if position is valid inside of bounds for just the y component
-        // returns true if position is valid inside of bounds for just the z component
-        // returns false if position is not valid inside of bounds for any component
-
-     // withinBoundingRectangle -
-
-        // throws if boundingRectangle is not defined
-        // throws if boundingRectangle.x does not exist
-        // throws if boundingRectangle.y does not exist
-        // throws if boundingRectangle.width does not exist
-        // throws if boundingRectangle.height does not exist
-        // returns false if position is valid inside of bounds for just the x component
-        // returns false if position is valid inside of bounds for just the y component
-        // returns true if position is valid inside of bounds for all components
-        // returns false if position is not valid inside of bounds for any component
-
-     // withinBoundingSphere -
-
-        // throws if boundingSphere is not defined
-        // throws if boundingSphere.radius is not defined
-        // throws if boundingSphere.center is not defined
-        // returns false if position is valid inside of bounds for just the x component
-        // returns false if position is valid inside of bounds for just the y component
-        // returns false if position is valid inside of bounds for just the z component
-        // returns true if position is valid inside of bounds for all components
-        // returns false if position is not valid inside of bounds for any component
-
-     // withinOrientedBoundingBox -
-
-         // throws if orientedBoundingBox is not defined
-         // throws if orientedBoundingBox.center is not defined
-         // throws if orientedBoundingBox.halfAxes is not defined
-         // returns false if position is valid inside of bounds for just the x component
-         // returns false if position is valid inside of bounds for just the y component
-         // returns false if position is valid inside of bounds for just the z component
-         // returns true if position is valid inside of bounds for all components
-         // returns false if position is not valid inside of bounds for any component
-
-     // withinCoordinateLimits -
-     // _withinLongitude -
-     // _withinLatitude -
-     // _withinHeight -
-     // withinHeadingPitchRollLimits -
-     // _withinHeading -
-     // _withinPitch -
-     // _witinRoll -
 
 });
