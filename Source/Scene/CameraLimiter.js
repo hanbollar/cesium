@@ -58,34 +58,8 @@ define([
      * @constructor
      */
     function CameraLimiter() {
-        this.boundingObject = {
-            // generic bounding volume
-
-            /**
-             * The AxisAligned Bounding Object for the limiter
-             *
-             * @type {AxisAlignedBoundingBox}
-             */
-            axisAligned : undefined,
-            /**
-             * The BoundingRectangle for the limiter
-             *
-             * @type {BoundingRectangle}
-             */
-            boundingRectangle : undefined,
-            /**
-             * The BoundingSphere for the limiter
-             *
-             * @type {BoundingSphere}
-             */
-            boundingSphere : undefined,
-            /**
-             * The OrientedBoundingBox for the limiter
-             *
-             * @type {OrientedBoundingBox}
-             */
-            orientedBoundingBox : undefined
-        };
+        // turn it into just one boundingObject that allows to be an axisAligned|boundingRectangle|boundingSphere|orientedBoundingBox types
+        this.boundingObject = undefined;
         this.coordinateLimits = {
             /**
              * minimum values for the coordinate limits
@@ -128,88 +102,52 @@ define([
      * @param {Cartesian3} [positionToCheck] The Cartesian3 location being checked
      * @returns {Boolean} <code>true</code> if the positionToCheck is within all bounding objects.
      */
-    CameraLimiter.prototype.withinAllBoundingObjects = function(positionToCheck) {
+    CameraLimiter.prototype.withinBoundingObject = function(positionToCheck) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(this.boundingObject.axisAligned) && !defined(this.boundingObject.boundingRectangle)
-            && !defined(this.boundingObject.boundingSphere) && !defined(this.boundingObject.orientedBoundingBox)) {
-            throw new DeveloperError('at least one bounding object required');
+        if (!defined(this.boundingObject)) {
+            throw new DeveloperError('bounding object is required');
+        }
+        if (!defined(positionToCheck)) {
+            throw new DeveloperError('positionToCheck is required.');
+        }
+        if (!defined(positionToCheck.x)) {
+            throw new DeveloperError('x is required.');
+        }
+        if (!defined(positionToCheck.y)) {
+            throw new DeveloperError('y is required.');
+        }
+        if (!defined(positionToCheck.z)) {
+            throw new DeveloperError('z is required.');
         }
         //>>includeEnd('debug');
 
-        var within = true;
-        if (defined(this.axisAligned)) {
-            within &= this.withinAxisAligned(positionToCheck);
-        }
-        if (defined(this.boundingRectangle)) {
-            within &= this.withinBoundingRectangle(positionToCheck);
-        }
-        if (defined(this.boundingSphere)) {
-            within &= this.withinBoundingSphere(positionToCheck);
-        }
-        if (defined(this.orientedBoundingBox)) {
-            within &= this.withinOrientedBoundingBox(positionToCheck);
+        if (this.boundingObject instanceof AxisAlignedBoundingBox) {
+            return this._withinAxisAligned(positionToCheck);
+        } else if (this.boundingObject instanceof BoundingRectangle) {
+            return this._withinBoundingRectangle(positionToCheck);
+        } else if (this.boundingObject instanceof BoundingSphere) {
+            return this._withinBoundingSphere(positionToCheck);
+        } else if (this.boundingObject instanceof OrientedBoundingBox) {
+            return this._withinOrientedBoundingBox(positionToCheck);
         }
 
-        return within;
-    };
-
-    /**
-     * Checks if the inputted Cartesian3 is within at least one bounding object used for this limiter.
-     * These bounding objects can be any of the following {@link AxisAlignedBoundingBox}, {@link BoundingRectangle},
-     * {@link BoundingSphere}, and {@link OrientedBoundingBox}.
-     * <code>true</code> if the inputted Cartesian3 is within any of the following components if they are defined:
-     * {@link AxisAlignedBoundingBox}, {@link BoundingRectangle}, {@link BoundingSphere}, and the {@link OrientedBoundingBox} ,
-     * <code>false</code> otherwise.
-     *
-     * @param {Cartesian3} [positionToCheck] The Cartesian3 location being checked
-     * @returns {Boolean} <code>true</code> if the positionToCheck is within at least one of the bounding objects.
-     */
-    CameraLimiter.prototype.withinAtLeastOneBoundingObject = function(positionToCheck) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(this.boundingObject.axisAligned) && !defined(this.boundingObject.boundingRectangle)
-            && !defined(this.boundingObject.boundingSphere) && !defined(this.boundingObject.orientedBoundingSphere)) {
-            throw new DeveloperError('at least one bounding object required');
-        }
+        throw new DeveloperError('bounding object is not of an allowed type');
         //>>includeEnd('debug');
-
-        var within = true;
-        if (defined(this.axisAligned)) {
-            within |= this.withinAxisAligned(positionToCheck);
-        }
-        if (defined(this.boundingRectangle)) {
-            within |= this.withinBoundingRectangle(positionToCheck);
-        }
-        if (defined(this.boundingSphere)) {
-            within |= this.withinBoundingSphere(positionToCheck);
-        }
-        if (defined(this.orientedBoundingBox)) {
-            within |= this.withinOrientedBoundingBox(positionToCheck);
-        }
-
-        return within;
     };
 
     /**
-     * Checks if the inputted Cartesian3 is within the {@link AxisAlignedBoundingBox} defined for this limiter.
-     * <code>true</code> if the inputted Cartesian3 is within the {@link AxisAlignedBoundingBox},
-     * <code>false</code> otherwise.
-     *
-     * @param {Cartesian3} [positionToCheck] The Cartesian3 location being checked
-     * @returns {Boolean} <code>true</code> if the positionToCheck is within the {@link AxisAlignedBoundingBox} defined for this limiter.
+     * @private
      */
-    CameraLimiter.prototype.withinAxisAligned = function(positionToCheck) {
-        this._positionAndElementsDefined(positionToCheck);
+    CameraLimiter.prototype._withinAxisAligned = function(positionToCheck) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(this.axisAligned)) {
-            throw new DeveloperError('axisAlignedBoundingBox is required.');
-        }
-        if (!defined(this.axisAligned.minimum)) {
+        if (!defined(this.boundingObject.minimum)) {
             throw new DeveloperError('minimum of axisAlignedBoundingBox is required.');
         }
-        if (!defined(this.axisAligned.maximum)) {
+        if (!defined(this.boundingObject.maximum)) {
             throw new DeveloperError('maximum of axisAlignedBoundingBox is required.');
         }
-        if (!defined(this.axisAligned.center)){
+        if (!defined(this.boundingObject.center)){
             throw new DeveloperError('center of axisAlignedBoundingBox is required.');
         }
         //>>includeEnd('debug');
@@ -222,34 +160,25 @@ define([
     };
 
     /**
-     * Checks if the inputted Cartesian3 is within the {@link BoundingRectangle} defined for this limiter.
-     * <code>true</code> if the inputted Cartesian3 is within the {@link BoundingRectangle},
-     * <code>false</code> otherwise.
-     *
-     * @param {Cartesian3} [positionToCheck] The Cartesian3 location being checked
-     * @returns {Boolean} <code>true</code> if the positionToCheck is within the {@link BoundingRectangle} defined for this limiter.
+     * @private
      */
-    CameraLimiter.prototype.withinBoundingRectangle = function(positionToCheck) {
-        this._positionAndElementsDefined(positionToCheck);
+    CameraLimiter.prototype._withinBoundingRectangle = function(positionToCheck) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(this.boundingRectangle)) {
-            throw new DeveloperError('boundingRectangle is required.');
-        }
-        if (!defined(this.boundingRectangle.x)) {
+        if (!defined(this.boundingObject.x)) {
             throw new DeveloperError('x of boundingRectangle is required.');
         }
-        if (!defined(this.boundingRectangle.y)) {
+        if (!defined(this.boundingObject.y)) {
             throw new DeveloperError('y of boundingRectangle is required.');
         }
-        if (!defined(this.boundingRectangle.width)){
+        if (!defined(this.boundingObject.width)){
             throw new DeveloperError('width of boundingRectangle is required.');
         }
-        if (!defined(this.boundingRectangle.height)){
+        if (!defined(this.boundingObject.height)){
             throw new DeveloperError('height of boundingRectangle is required.');
         }
         //>>includeEnd('debug');
 
-        var rect = this.boundingRectangle;
+        var rect = this.boundingObject;
 
         var minimum = new Cartesian2(rect.x, rect.y);
         var maximum = new Cartesian2(rect.x + rect.width, rect.y + rect.height);
@@ -258,65 +187,48 @@ define([
         var positionVsMinimumCheck = position - minimum;
         var positionVsMaximumCheck = maximum - position;
 
-        return (positionVsMinimumCheck.x >= 0 && positionVsMinimumCheck.y >= 0) && (positionVsMaximumCheck.x >= 0 && positionVsMaximumCheck.y >= 0);
+        return (positionVsMinimumCheck.x >= 0 && positionVsMinimumCheck.y >= 0)
+               && (positionVsMaximumCheck.x >= 0 && positionVsMaximumCheck.y >= 0);
     };
 
     /**
-     * Checks if the inputted Cartesian3 is within the {@link BoundingSphere} defined for this limiter.
-     * <code>true</code> if the inputted Cartesian3 is within the {@link BoundingSphere},
-     * <code>false</code> otherwise.
-     *
-     * @param {Cartesian3} [positionToCheck] The Cartesian3 location being checked
-     * @returns {Boolean} <code>true</code> if the positionToCheck is within the {@link BoundingSphere} defined for this limiter.
+     * @private
      */
-    CameraLimiter.prototype.withinBoundingSphere = function(positionToCheck) {
-        this._positionAndElementsDefined(positionToCheck);
+    CameraLimiter.prototype._withinBoundingSphere = function(positionToCheck) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(this.boundingSphere)) {
-            throw new DeveloperError('boundingSphere is required.');
-        }
-        if (!defined(this.boundingSphere.radius)) {
+        if (!defined(this.boundingObject.radius)) {
             throw new DeveloperError('radius of bounding sphere is required.');
         }
-        if (!defined(this.boundingSphere.center)) {
+        if (!defined(this.boundingObject.center)) {
             throw new DeveloperError('center of bounding sphere is required.');
         }
         //>>includeEnd('debug');
 
-        var radius = this.boundingSphere.radius;
-        var distanceToCenter = Cartesian3.distance(positionToCheck, this.boundingSphere.center);
+        var radius = this.boundingObject.radius;
+        var distanceToCenter = Cartesian3.distance(positionToCheck, this.boundingObject.center);
 
         return (distanceToCenter.x <= radius && distanceToCenter.y <= radius && distanceToCenter.z <= radius);
     };
 
     /**
-     * Checks if the inputted Cartesian3 is within the {@link OrientedBoundingBox} defined for this limiter.
-     * <code>true</code> if the inputted Cartesian3 is within the {@link OrientedBoundingBox},
-     * <code>false</code> otherwise.
-     *
-     * @param {Cartesian3} [positionToCheck] The Cartesian3 location being checked
-     * @returns {Boolean} <code>true</code> if the positionToCheck is within the {@link OrientedBoundingBox} defined for this limiter.
+     * @private
      */
-    CameraLimiter.prototype.withinOrientedBoundingBox = function(positionToCheck) {
-        this._positionAndElementsDefined(positionToCheck);
+    CameraLimiter.prototype._withinOrientedBoundingBox = function(positionToCheck) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(this.orientedBoundingBox)) {
-            throw new DeveloperError('orientedBoundingBox is required.');
-        }
-        if (!defined(this.orientedBoundingBox.center)) {
+        if (!defined(this.boundingObject.center)) {
             throw new DeveloperError('center of orientedBoundingBox is required.');
         }
-        if (!defined(this.boundingSphere.halfAxes)) {
+        if (!defined(this.boundingObject.halfAxes)) {
             throw new DeveloperError('halfAxes of orientedBoundingBox is required.');
         }
         //>>includeEnd('debug');
 
         // convert world space positionToCheck to orientedBoundingBox's object space.
-        if (this.boundingSphere.halfAxes.equals(Matrix3.ZERO)) {
+        if (this.boundingObject.halfAxes.equals(Matrix3.ZERO)) {
             return false;
         }
         var inverseTransformationMatrix = Matrix3.IDENTITY;
-        Matrix3.inverse(this.boundingSphere.halfAxes, inverseTransformationMatrix);
+        Matrix3.inverse(this.boundingObject.halfAxes, inverseTransformationMatrix);
         var positionInObjectSpace = inverseTransformationMatrix * positionToCheck;
 
         // once in object space just check if converted location is within axis oriented unit cube
@@ -488,25 +400,6 @@ define([
     /**
      * @private
      */
-    CameraLimiter.prototype._positionAndElementsDefined = function(position) {
-        if (!defined(position)) {
-            throw new DeveloperError('positionToCheck is required.');
-        }
-        if (!defined(position.x)) {
-            throw new DeveloperError('x is required.');
-        }
-        if (!defined(position.y)) {
-            throw new DeveloperError('y is required.');
-        }
-        if (!defined(position.z)) {
-            throw new DeveloperError('z is required.');
-        }
-        return true;
-    };
-
-    /**
-     * @private
-     */
     CameraLimiter.prototype._allLimiterMaxMinPairsMatched = function() {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(this.coordinateLimits.minimum) && defined(this.coordinateLimits.maximum)) {
@@ -584,10 +477,21 @@ define([
             result = new CameraLimiter();
         }
 
-        AxisAlignedBoundingBox.clone(limiter.boundingObject.axisAligned, result.boundingObject.axisAligned);
-        BoundingRectangle.clone(limiter.boundingObject.boundingRectangle, result.boundingObject.boundingRectangle);
-        BoundingSphere.clone(limiter.boundingObject.boundingSphere, result.boundingObject.boundingSphere);
-        OrientedBoundingBox.clone(limiter.boundingObject.orientedBoundingBox, result.boundingObject.orientedBoundingBox);
+        if (!defined(limiter.boundingObject)) {
+            result.boundingObject = undefined;
+        } else if (limiter.boundingObject instanceof AxisAlignedBoundingBox) {
+            AxisAlignedBoundingBox.clone(limiter.boundingObject, result.boundingObject);
+        } else if (limiter.boundingObject instanceof BoundingRectangle) {
+            BoundingRectangle.clone(limiter.boundingObject, result.boundingObject);
+        } else if (limiter.boundingObject instanceof BoundingSphere) {
+            BoundingSphere.clone(limiter.boundingObject, result.boundingObject);
+        } else if (limiter.boundingObject instanceof OrientedBoundingBox) {
+            OrientedBoundingBox.clone(limiter.boundingObject, result.boundingObject);
+        } else {
+            //>>includeStart('debug', pragmas.debug);
+            throw new DeveloperError('bounding object is not of an allowed type');
+            //>>includeEnd('debug');
+        }
 
         result.coordinateLimits.minLatitude = limiter.coordinateLimits.minLatitude;
         result.coordinateLimits.maxLatitude = limiter.coordinateLimits.maxLatitude;
