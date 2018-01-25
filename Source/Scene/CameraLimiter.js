@@ -125,7 +125,7 @@ define([
     };
 
     /**
-     * TO FILL INT STILL - TODO-------------------
+     * TO FILL INT STILL - TODO------------------- NOT SURE IF REALLY NEED THIS - MAYBE JUST IN CAMERA HAVE THAT PART IN AN IF ELSE? - I KNOW I NEED THIS FOR POSITION BUT NOT SURE FOR ORIENTATION..... MAYBE.
      * GivenConstraints - returns closest valid location to inputted location
      */
     CameraLimiter.prototype.closestLocationTo = function(positionToCheck) {
@@ -133,6 +133,7 @@ define([
             return positionToCheck;
         }
 
+        // both the below functions return cartographic values
         var closestToBounding = this._closestLocationToBoundingObject(value);
         var closestToCoordinates = this._closestLocationToCoordinatesLimits(value);
 
@@ -167,7 +168,7 @@ define([
     /**
      * @private
      */
-    CameraLimiter.prototype._closestLocationToBoundingObject(position) {
+    CameraLimiter.prototype._closestLocationToBoundingObject = function(position) {
         // already know the positionToCheck is defined and it's xyz vals are also defined
 
 // TODO ---------------------
@@ -176,13 +177,53 @@ define([
     /**
      * @private
      */
-    CameraLimiter.prototype._closestLocationToCoordinatesLimits(position) {
+    CameraLimiter.prototype._closestLocationToCoordinatesLimits = function(position) {
         // already know the positionToCheck is defined and it's xyz vals are also defined
 
         // convert to cartographic if needed
-// TODO ---------------------
+// TODO ---------------------check completed?
 
-        if (position.)
+        var value;
+        if (position instanceof Cartesian3) {
+            value = Cartographic.fromCartesian(value);
+        } else if (position instanceof Cartographic) {
+            value = position;
+        } else {
+            //>>includeStart('debug', pragmas.debug);
+            throw new DeveloperError('position must be of Cartographic or Cartesian3 types.');
+            //>>includeEnd('debug');
+        }
+
+        this.allLimiterValuesCreatedProperly();
+
+        // allLimiterValuesCreatedProperly means that if a min is defined, max must also be.
+        var longitudeDefined = defined(this.minimum.longitude);
+        var latitudeDefined = defined(this.minimum.latitude);
+        var heightDefined = defined(this.minimum.height);
+
+        if (longitudeDefined && !this._withinLongitude(value.longitude)) {
+            if (value.longitude < this.minimum.longitude) {
+                value.longitude = this.minimum.longitude;
+            } else if (value.longitude > this.maximum.longitude) {
+                value.longitude = this.maximum.longitude;
+            }
+        }
+        if (latitudeDefined && !this._withinLatitude(value.latitude)) {
+            if (value.latitude < this.minimum.latitude) {
+                value.latitude = this.minimum.latitude;
+            } else if (value.latitude > this.maximum.latitude) {
+                value.latitude = this.maximum.latitude;
+            }
+        }
+        if (heightDefined && !this._withinHeight(value.height)) {
+            if (value.height < this.minimum.height) {
+                value.height = this.minimum.height;
+            } else if (value.height > this.maximum.height) {
+                value.height = this.maximum.height;
+            }
+        }
+
+        return value;
     };
 
     /**
@@ -190,7 +231,42 @@ define([
      * GivenConstraints - returns closest valid orientation to inputted orientation
      */
     CameraLimiter.prototype.closestOrientationTo = function(orientationToCheck) {
-// TODO ------------------
+// TODO ------------------check completed?
+        if(this.withinHeadingPitchRollLimits(orientationToCheck)) {
+            return orientationToCheck;
+        }
+
+        this.allLimiterValuesCreatedProperly();
+
+        // allLimiterValuesCreatedProperly means that if a min is defined, max must also be.
+        var headingDefined = defined(this.minimum.heading);
+        var pitchDefined = defined(this.minimum.pitch);
+        var rollDefined = defined(this.minimum.roll);
+
+        var returningOrientation = orientationToCheck;
+        if (headingDefined && !this._withinHeading(orientationToCheck.heading)) {
+            if (returningOrientation.heading < this.minimum.heading) {
+                returningOrientation.heading = this.minimum.heading;
+            } else if (returningOrientation.heading > this.maximum.heading) {
+                returningOrientation.heading = this.maximum.heading;
+            }
+        }
+        if (pitchDefined && !this._withinPitch(orientationToCheck.pitch)) {
+            if (returningOrientation.pitch < this.minimum.pitch) {
+                returningOrientation.pitch = this.minimum.pitch;
+            } else if (returningOrientation.pitch > this.maximum.pitch) {
+                returningOrientation.pitch = this.maximum.pitch;
+            }
+        }
+        if (rollDefined && !this._withinRoll(orientationToCheck.roll)) {
+            if (returningOrientation.roll < this.minimum.roll) {
+                returningOrientation.roll = this.minimum.roll;
+            } else if (returningOrientation.roll > this.maximum.roll) {
+                returningOrientation.roll = this.maximum.roll;
+            }
+        }
+
+        return returningOrientation;
     };
 
     /**
