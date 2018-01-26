@@ -51,9 +51,7 @@ define([
     'use strict';
 
     /**
-     * The camera limiter is defined by specific bounding objects and/or additional limit parameters for any position
-     * and orientation adjustments.
-     * <br /><br />
+     * The CameraLimiter is used to limit a {@Camera}'s position (using a bounding object) and orientation (defined by {@HeadingPitchRange}.
      *
      * @alias CameraLimiter
      * @constructor
@@ -76,21 +74,40 @@ define([
     }
 
     /**
-     * Checks if the inputted Cartesian3|Cartogrpahic is within every bounding object used for this limiter.
-     * These bounding objects can be any of the following {@link AxisAlignedBoundingBox}, {@link BoundingRectangle},
-     * {@link BoundingSphere}, and {@link OrientedBoundingBox}.
-     *
-     * <code>true</code> if the inputted Cartesian3 is within all of the following components if they are defined:
-     * {@link AxisAlignedBoundingBox}, {@link BoundingRectangle}, {@link BoundingSphere}, and the {@link OrientedBoundingBox} ,
-     * <code>false</code> otherwise.
-     *
-     * @param {Cartesian3} [positionToCheck] The Cartesian3 location being checked
-     * @returns {Boolean} <code>true</code> if the positionToCheck is within all bounding objects.
+     * TO FILL INT STILL -
+     * TODO-------COMPLETE THIS DOCUMENTATION
+     * GivenConstraints - returns closest valid location to inputted location
      */
-    CameraLimiter.prototype.withinBoundingObject = function(positionToCheck) {
+    CameraLimiter.prototype.closestLocationTo = function(positionToCheck) {
+        Check.defined('positionToCheck', positionToCheck);
+
+        if (!defined(this.boundingObject) || this._withinBoundingObject(positionToCheck)) {
+            return positionToCheck;
+        }
+
+        if (this.boundingObject instanceof AxisAlignedBoundingBox) {
+            // axis aligned has center, min and max cartesian3 locations
+        } else if (this.boundingObject instanceof BoundingRectangle) {
+            // bounding rectangle has x, y, width, height
+        } else if (this.boundingObject instanceof BoundingSphere) {
+            // bounding sphere has center, radius
+        } else if (this.boundingObject instanceof OrientedBoundingBox) {
+            // oriented bounding box has center and matrix3 of half axes (axes directions of half length than full visual (ie originating from center of oriented cube)
+        } else {
+            //>>includeStart('debug', pragmas.debug);
+            throw new DeveloperError('Bounding Object not of allowed type. '
+                                     + 'Must be AxisAlignedBoundingBox|BoundingRectangle|BoundingSphere|OrientedBoundingBox');
+            //>>includeEnd('debug');
+        }
+    };
+
+    /**
+     * @private
+     */
+    CameraLimiter.prototype._withinBoundingObject = function(positionToCheck) {
         //>>includeStart('debug', pragmas.debug);
         Check.defined('this.boundingObject', this.boundingObject);
-        if (!(positionToCheck instanceof Cartesian3) && !positionToCheck instanceof Cartographic) {
+        if (!(positionToCheck instanceof Cartesian3) && !(positionToCheck instanceof Cartographic)) {
             throw new DeveloperError('positionToCheck required to be of type Cartesian3 or Cartographic.');
         }
         //>>includeEnd('debug');
@@ -117,99 +134,6 @@ define([
         //>>includeStart('debug', pragmas.debug);
         throw new DeveloperError('bounding object is not of an allowed type');
         //>>includeEnd('debug');
-    };
-
-    /**
-     * TO FILL INT STILL - TODO------------------- NOT SURE IF REALLY NEED THIS - MAYBE JUST IN CAMERA HAVE THAT PART IN AN IF ELSE? - I KNOW I NEED THIS FOR POSITION BUT NOT SURE FOR ORIENTATION..... MAYBE.
-     * GivenConstraints - returns closest valid location to inputted location
-     */
-    CameraLimiter.prototype.closestLocationTo = function(positionToCheck) {
-
-        // withinCoordinateLimits wants cartographic
-        // withinBounding wants cartesian
-
-
-        // LIKE 2D VS 3D MODE - TYPE - LIMIT BY BVOLUME OR LIMIT BY coordinates mode
-
-        // TODO -------- CHECK COMPLETED?????
-        if (this.withinBoundingObject(positionToCheck) && this.withinCoordinateLimits(positionToCheck)) {
-            return positionToCheck;
-        }
-
-        var cartographicValue;
-        var cartesian3Value;
-        if (positionToCheck instanceof Cartesian3) {
-            cartesian3Value = positionToCheck;
-            cartographicValue = Cartographic.fromCartesian(positionToCheck);
-        } else if (positionToCheck instanceof Cartographic) {
-            cartesian3Value = Cartesian3.fromRadians(positionToCheck.longitude, positionToCheck.latitude, positionToCheck.height);
-            cartographicValue = positionToCheck;
-        } else {
-            //>>includeStart('debug', pragmas.debug);
-            throw new DeveloperError('position must be of Cartographic or Cartesian3 types.');
-            //>>includeEnd('debug');
-        }
-
-        // both the below functions return cartographic values
-        var closestToBounding = this._closestLocationToBoundingObject(cartesian3Value);
-        var closestToCoordinates = this._closestLocationToCoordinatesLimits(cartographicValue);
-
-        //>>includeStart('debug', pragmas.debug);
-        if (!this.withinBoundingObject(closestToBounding)) {
-            throw new DeveloperError('Camera was not originally within constraints when limiter was created.'
-                                     + ' closestToBounding should be in the bounding object.');
-        }
-        if (!this.withinCoordinateLimits(closestToCoordinates)) {
-            throw new DeveloperError('Camera was not originally within constraints when limiter was created. '
-                                     + 'closestToCoordinates should be in the coordinate limits.');
-        }
-        //>>includeEnd('debug');
-
-        var closestToBoundingInCoordinates = this.withinCoordinateLimits(closestToBounding);
-        var closestToCoordinatesInBounding = this.withinBoundingObject(closestToCoordinates);
-
-        if (closestToBoundingInCoordinates && closestToCoordinatesInBounding) {
-            var c3ClosestToBounding = Cartesian3.fromRadians(closestToBounding.longitude, closestToBounding.latitude, closestToBounding.height);
-            var c3ClosestToCoordinates = Cartesian3.fromRadians(closestToCoordinates.longitude, closestToCoordinates.latitude, closestToCoordinates.height);
-
-            if (Cartesian3.distance(c3ClosestToBounding, cartesian3Value) < Cartesian3.distance(c3ClosestToCoordinates, cartesian3Value)) {
-                return closestToBounding;
-            }
-            return closestToCartesian;
-            return closestToCoordinates;
-        } else if (closestToBoundingInCoordinates && !closestToCoordinatesInBounding) {
-            return closestToBounding;
-        } else if (!closestToBoundingInCoordinates && closestToCoordinatesInBounding) {
-            return closestToCoordinates;
-        }
-
-        //>>includeStart('debug', pragmas.debug);
-        throw new DeveloperError('(1) Disjointed Constraints: Coordinate Limits and Bounding Object must overlap somewhere.');
-        //>>includeEnd('debug');
-    };
-
-    /**
-     * @private
-     */
-    CameraLimiter.prototype._closestLocationToBoundingObject = function(position) {
-        // already know the positionToCheck is defined and it's xyz vals are also defined
-        // want input as cartesian3
-
-// TODO ---------------------
-        if (this.boundingObject instanceof AxisAlignedBoundingBox) {
-            // axis aligned has center, min and max cartesian3 locations
-        } else if (this.boundingObject instanceof BoundingRectangle) {
-
-        } else if (this.boundingObject instanceof BoundingSphere) {
-
-        } else if (this.boundingObject instanceof OrientedBoundingBox) {
-
-        } else {
-            //>>includeStart('debug', pragmas.debug);
-            throw new DeveloperError('Bounding Object not of allowed type. '
-                                     + 'Must be AxisAlignedBoundingBox|BoundingRectangle|BoundingSphere|OrientedBoundingBox');
-            //>>includeEnd('debug');
-        }
     };
 
     /**
