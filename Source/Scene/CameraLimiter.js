@@ -79,7 +79,7 @@ define([
     }
 
     /**
-     * Checks if the inputted Cartesian3 is within every bounding object used for this limiter.
+     * Checks if the inputted Cartesian3|Cartogrpahic is within every bounding object used for this limiter.
      * These bounding objects can be any of the following {@link AxisAlignedBoundingBox}, {@link BoundingRectangle},
      * {@link BoundingSphere}, and {@link OrientedBoundingBox}.
      *
@@ -95,8 +95,8 @@ define([
         if (!defined(this.boundingObject)) {
             throw new DeveloperError('bounding object is required');
         }
-        if (!defined(positionToCheck)) {
-            throw new DeveloperError('positionToCheck is required.');
+        if (!(positionToCheck instanceof Cartesian3)) {
+            throw new DeveloperError('positionToCheck required to be of type Cartesian3.');
         }
         if (!defined(positionToCheck.x)) {
             throw new DeveloperError('x is required.');
@@ -109,14 +109,23 @@ define([
         }
         //>>includeEnd('debug');
 
+        var value;
+        if (positionToCheck instanceof Cartographic) {
+            value = Cartesian3.fromRadians(positionToCheck.longitude, positionToCheck.latitude, positionToCheck.height);
+        } else if (positionToCheck instanceof Cartesian3) {
+            value = positionToCheck;
+        } else {
+            throw new DeveloperError('valueToCheck must be only of type Cartesian3 or Cartographic');
+        }
+
         if (this.boundingObject instanceof AxisAlignedBoundingBox) {
-            return this._withinAxisAligned(positionToCheck);
+            return this._withinAxisAligned(value);
         } else if (this.boundingObject instanceof BoundingRectangle) {
-            return this._withinBoundingRectangle(positionToCheck);
+            return this._withinBoundingRectangle(value);
         } else if (this.boundingObject instanceof BoundingSphere) {
-            return this._withinBoundingSphere(positionToCheck);
+            return this._withinBoundingSphere(value);
         } else if (this.boundingObject instanceof OrientedBoundingBox) {
-            return this._withinOrientedBoundingBox(positionToCheck);
+            return this._withinOrientedBoundingBox(value);
         }
 
         //>>includeStart('debug', pragmas.debug);
@@ -130,52 +139,64 @@ define([
      */
     CameraLimiter.prototype.closestLocationTo = function(positionToCheck) {
 
+        // withinCoordinateLimits wants cartographic
+        // withinBounding wants cartesian
+
         // TODO -------- CHECK COMPLETED?????
         if (this.withinBoundingObject(positionToCheck) && this.withinCoordinateLimits(positionToCheck)) {
             return positionToCheck;
         }
 
-        // both the below functions return cartographic values
-        var closestToBounding = this._closestLocationToBoundingObject(positionToCheck);
-        var closestToCoordinates = this._closestLocationToCoordinatesLimits(positionToCheck);
-
-        //>>includeStart('debug', pragmas.debug);
-        if (!this.withinBoundingObject(closestToBounding)) {
-            throw new DeveloperError('closestToBounding should be in the bounding object.');
-        }
-        if (!this.withinCoordinateLimits(closestToCoordinates)) {
-            throw new DeveloperError('closestToCoordinates should be in the coordinate limits');
-        }
-        //>>includeEnd('debug');
-
-        var value;
+        var cartographicValue;
+        var cartesian3Value;
         if (positionToCheck instanceof Cartesian3) {
-            value = positionToCheck;
+            cartesian3Value = positionToCheck;
+            cartographicValue = Cartographic.fromCartesian(positionToCheck);
         } else if (positionToCheck instanceof Cartographic) {
-            value = Cartesian3.fromRadians(positionToCheck.longitude, positionToCheck.latitude, positionToCheck.height);
+            cartesian3Value = Cartesian3.fromRadians(positionToCheck.longitude, positionToCheck.latitude, positionToCheck.height);
+            cartographicValue = positionToCheck;
         } else {
             //>>includeStart('debug', pragmas.debug);
             throw new DeveloperError('position must be of Cartographic or Cartesian3 types.');
             //>>includeEnd('debug');
         }
 
-        var closestToBoundingWithinCoordinateLimits = this.withinCoordinateLimits(closestToBounding);
-        var closestToCoordinatesWithinBoundingObject = this.withinBoundingObject(closestToCoordinates);
+        // both the below functions return cartographic values
+        var closestToBounding = this._closestLocationToBoundingObject(cartesian3Value);
+        var closestToCoordinates = this._closestLocationToCoordinatesLimits(cartographicValue);
 
-        if (closestToBoundingWithinCoordinateLimits && closestToCoordinatesWithinBoundingObject) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!this.withinBoundingObject(closestToBounding)) {
+            throw new DeveloperError('Camera was not originally within constraints when limiter was created.'
+                                     + ' closestToBounding should be in the bounding object.');
+        }
+        if (!this.withinCoordinateLimits(closestToCoordinates)) {
+            throw new DeveloperError('Camera was not originally within constraints when limiter was created. '
+                                     + 'closestToCoordinates should be in the coordinate limits.');
+        }
+        //>>includeEnd('debug');
+
+        var closestToBoundingInCoordinates = this.withinCoordinateLimits(closestToBounding);
+        var closestToCoordinatesInBounding = this.withinBoundingObject(closestToCoordinates);
+
+        if (closestToBoundingInCoordinates && closestToCoordinatesInBounding) {
             var c3ClosestToBounding = Cartesian3.fromRadians(closestToBounding.longitude, closestToBounding.latitude, closestToBounding.height);
             var c3ClosestToCoordinates = Cartesian3.fromRadians(closestToCoordinates.longitude, closestToCoordinates.latitude, closestToCoordinates.height);
-            return (Cartesian3.distance(c3ClosestToBounding, value) < Cartesian3.distance(c3ClosestToCoordinates, value)) ? closestToBounding : closestToCoordinates;
-        } else if (closestToBoundingWithinCoordinateLimits && !closestToCoordinatesWithinBoundingObject) {
-            return closestToBounding;
-        } else if (!closestToBoundingWithinCoordinateLimits && closestToCoordinatesWithinBoundingObject) {
+
+            if (Cartesian3.distance(c3ClosestToBounding, cartesian3Value) < Cartesian3.distance(c3ClosestToCoordinates, cartesian3Value)) {
+                return closestToBounding;
+            }
+            return closestToCartesian;
             return closestToCoordinates;
-        } else {
-            //>>includeStart('debug', pragmas.debug);
-            throw new DeveloperError('(1) Disjointed Constraints: Coordinate Limits and Bounding Object must overlap somewhere.'
-                                     + 'OR (2) Camera was not originally within constraints when Limiter was created');
-            //>>includeEnd('debug');
+        } else if (closestToBoundingInCoordinates && !closestToCoordinatesInBounding) {
+            return closestToBounding;
+        } else if (!closestToBoundingInCoordinates && closestToCoordinatesInBounding) {
+            return closestToCoordinates;
         }
+
+        //>>includeStart('debug', pragmas.debug);
+        throw new DeveloperError('(1) Disjointed Constraints: Coordinate Limits and Bounding Object must overlap somewhere.');
+        //>>includeEnd('debug');
     };
 
     /**
@@ -183,8 +204,23 @@ define([
      */
     CameraLimiter.prototype._closestLocationToBoundingObject = function(position) {
         // already know the positionToCheck is defined and it's xyz vals are also defined
+        // want input as cartesian3
 
 // TODO ---------------------
+        if (this.boundingObject instanceof AxisAlignedBoundingBox) {
+            // axis aligned has center, min and max cartesian3 locations
+        } else if (this.boundingObject instanceof BoundingRectangle) {
+
+        } else if (this.boundingObject instanceof BoundingSphere) {
+
+        } else if (this.boundingObject instanceof OrientedBoundingBox) {
+
+        } else {
+            //>>includeStart('debug', pragmas.debug);
+            throw new DeveloperError('Bounding Object not of allowed type. '
+                                     + 'Must be AxisAlignedBoundingBox|BoundingRectangle|BoundingSphere|OrientedBoundingBox');
+            //>>includeEnd('debug');
+        }
     };
 
     /**
@@ -192,6 +228,8 @@ define([
      */
     CameraLimiter.prototype._closestLocationToCoordinatesLimits = function(position) {
         // already know the positionToCheck is defined and it's xyz vals are also defined
+
+        // want input as cartographic
 
         // convert to cartographic if needed
 // TODO ---------------------check completed?
