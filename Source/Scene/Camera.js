@@ -3307,6 +3307,9 @@ define([
             this.direction = fixedDirection;
             this.up = fixedUp;
             this.right = fixedRight;
+
+            // console.log('orientation changed');
+            // console.log(this.orientation);
         }
     }
 
@@ -3314,7 +3317,16 @@ define([
      * @private
      */
     Camera.prototype._limitPosition = function() {
+        // console.log('prev position:');
+        // console.log(Cartesian3.clone(this.position));
+        // console.log('curr height');
+        // console.log(Cartographic.fromCartesian(this.position).height);
         this.position = defined(this.cameraLimiter) ? this.cameraLimiter.closestLocationTo(this.position) : this.position;
+
+        // if (defined(this.cameraLimiter)) {
+        //     console.log('position changed');
+        //     console.log(this.position);
+        // }
     }
 
     return Camera;

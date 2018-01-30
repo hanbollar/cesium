@@ -168,15 +168,19 @@ define([
             return position;
         }
 
-        var direction = Cartesian3.subtract(position, center, new Cartesian3());
+        // convert to cartographic and check if at appropriate height - sphere radius - if not then clarify
+        var cartographicRep = Cartographic.fromCartesian(position);
+        if (cartographicRep.height > )
+
+        var direction = Cartesian3.subtract(center, position, new Cartesian3());
         Cartesian3.normalize(direction, direction);
         Cartesian3.multiplyByScalar(direction, radius, direction);
         var locationOnSphereInDirection = Cartesian3.add(direction, center, new Cartesian3());
 
-        var distanceToLocOnSphere = Cartesian3.distance(locationOnSphereInDirection, center);
-        var distanceToPosition = Cartesian3.distance(position, center);
+        var distanceToLocOnSphere = Cartesian3.distanceSquared(locationOnSphereInDirection, center);
+        var distanceToPosition = Cartesian3.distanceSquared(position, center);
 
-        return (distanceToPosition < distanceToLocOnSphere) ? position : locationOnSphereInDirection;
+        return (distanceToPosition < distanceToLocOnSphere || distanceToPosition) ? position : locationOnSphereInDirection;
     };
 
     /**
