@@ -169,8 +169,8 @@ define([
         }
 
         // convert to cartographic and check if at appropriate height - sphere radius - if not then clarify
-        var cartographicRep = Cartographic.fromCartesian(position);
-        if (cartographicRep.height > )
+        // var cartographicRep = Cartographic.fromCartesian(position);
+        // if (cartographicRep.height > )
 
         var direction = Cartesian3.subtract(center, position, new Cartesian3());
         Cartesian3.normalize(direction, direction);
