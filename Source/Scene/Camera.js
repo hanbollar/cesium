@@ -1,5 +1,6 @@
 define([
         '../Core/BoundingSphere',
+        '../Core/CameraLimiter',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
@@ -31,6 +32,7 @@ define([
         './SceneMode'
     ], function(
         BoundingSphere,
+        CameraLimiter,
         Cartesian2,
         Cartesian3,
         Cartesian4,
@@ -233,6 +235,13 @@ define([
         mag += mag * Camera.DEFAULT_VIEW_FACTOR;
         Cartesian3.normalize(this.position, this.position);
         Cartesian3.multiplyByScalar(this.position, mag, this.position);
+
+        /**
+         * If set, the camera will be constrained by location and viewing ability for moving and changes in the look vector.
+         * @type {CameraLimiter}
+         * @default undefined
+         */
+        this.cameraLimiter = undefined;
     }
 
     /**
@@ -980,10 +989,13 @@ define([
         Matrix4.multiplyByPointAsVector(inverse, up, this.up);
         Cartesian3.cross(this.direction, this.up, this.right);
 
+        this._limitOrientation();
+        this._limitPosition();
+
         updateMembers(this);
     };
 
-    var scratchAdjustOrtghographicFrustumMousePosition = new Cartesian2();
+    var scratchAdjustOrthographicFrustumMousePosition = new Cartesian2();
     var pickGlobeScratchRay = new Ray();
     var scratchRayIntersection = new Cartesian3();
     var scratchDepthIntersection = new Cartesian3();
@@ -1008,7 +1020,7 @@ define([
         var depthIntersection;
 
         if (defined(globe)) {
-            var mousePosition = scratchAdjustOrtghographicFrustumMousePosition;
+            var mousePosition = scratchAdjustOrthographicFrustumMousePosition;
             mousePosition.x = scene.drawingBufferWidth / 2.0;
             mousePosition.y = scene.drawingBufferHeight / 2.0;
 
@@ -1134,6 +1146,10 @@ define([
     var scratchToHPRRight = new Cartesian3();
 
     function directionUpToHeadingPitchRoll(camera, position, orientation, result) {
+        if (!defined(result)) {
+            result = new HeadingPitchRoll();
+        }
+
         var direction = Cartesian3.clone(orientation.direction, scratchToHPRDirection);
         var up = Cartesian3.clone(orientation.up, scratchToHPRUp);
 
@@ -1246,6 +1262,10 @@ define([
         scratchHpr.heading = defaultValue(orientation.heading, 0.0);
         scratchHpr.pitch = defaultValue(orientation.pitch, -CesiumMath.PI_OVER_TWO);
         scratchHpr.roll = defaultValue(orientation.roll, 0.0);
+
+        if (defined(this.cameraLimiter)) {
+            scratchHpr = this.cameraLimiter.closestOrientationTo(scratchHpr);
+        }
 
         this._suspendTerrainAdjustment = true;
 
@@ -1487,6 +1507,7 @@ define([
         }
         //>>includeEnd('debug');
 
+        this._limitPosition();
         var cameraPosition = this.position;
         Cartesian3.multiplyByScalar(direction, amount, moveScratch);
         Cartesian3.add(cameraPosition, moveScratch, cameraPosition);
@@ -1687,6 +1708,9 @@ define([
         Matrix3.multiplyByVector(rotation, direction, direction);
         Matrix3.multiplyByVector(rotation, up, up);
         Matrix3.multiplyByVector(rotation, right, right);
+
+        this._limitOrientation();
+
     };
 
     /**
@@ -1742,6 +1766,8 @@ define([
         Matrix3.multiplyByVector(rotation, this.up, this.up);
         Cartesian3.cross(this.direction, this.up, this.right);
         Cartesian3.cross(this.right, this.direction, this.up);
+
+        this._limitOrientation();
 
         this._adjustOrthographicFrustum(false);
     };
@@ -2118,6 +2144,9 @@ define([
         Cartesian3.normalize(this.right, this.right);
         Cartesian3.cross(this.right, this.direction, this.up);
         Cartesian3.normalize(this.up, this.up);
+
+        this._limitOrientation();
+        this._limitPosition();
 
         this._adjustOrthographicFrustum(true);
     };
@@ -2806,6 +2835,7 @@ define([
         var orientation = defaultValue(options.orientation, defaultValue.EMPTY_OBJECT);
         if (defined(orientation.direction)) {
             orientation = directionUpToHeadingPitchRoll(this, destination, orientation, scratchSetViewOptions.orientation);
+            orientation = (defined(this.cameraLimiter)) ? this.cameraLimiter.closestOrientationTo(orientation) : orientation;
         }
 
         if (defined(options.duration) && options.duration <= 0.0) {
@@ -2827,6 +2857,7 @@ define([
         if (isRectangle) {
             destination = this.getRectangleCameraCoordinates(destination, scratchFlyToDestination);
         }
+        destination = (defined(this.cameraLimiter)) ? this.cameraLimiter.closestLocationTo(destination) : destination;
 
         var that = this;
         var flightTween;
@@ -3242,6 +3273,49 @@ define([
      * A function that will execute when a flight is cancelled.
      * @callback Camera~FlightCancelledCallback
      */
+
+    /**
+     * @private
+     */
+    Camera.prototype._limitOrientation = function() {
+        if (defined(this.cameraLimiter) && defined(this.cameraLimiter.minHeadingPitchRoll)) {
+            var orientation = {
+                direction : this.direction,
+                up : this.up,
+                right : this.right
+            }
+            var hpr = new HeadingPitchRoll();
+            hpr = directionUpToHeadingPitchRoll(this, this.position, orientation, hpr);
+            var headingCheck = this.cameraLimiter.closestOrientationTo(hpr);
+            var fixed = Transforms.headingPitchRollToFixedFrame(this.position, headingCheck, new Matrix4());
+
+            var fixedDirection = Matrix3.getColumn(fixed, 2, new Cartesian3());
+            Cartesian3.multiplyByScalar(fixedDirection, -1, fixedDirection);
+            var fixedUp = Matrix3.getColumn(fixed, 1, new Cartesian3());
+            var fixedRight = Matrix3.getColumn(fixed, 0, new Cartesian3());
+
+            if (!defined(fixedDirection) || isNaN(fixedDirection.x) || isNaN(fixedDirection.y) || isNaN(fixedDirection.z)) {
+                throw new DeveloperError('direction created in camera limiter update is defined incorrectly.');
+            }
+            if (!defined(fixedUp) || isNaN(fixedUp.x) || isNaN(fixedUp.y) || isNaN(fixedUp.z)) {
+                throw new DeveloperError('up created in camera limiter update is defined incorrectly.');
+            }
+            if (!defined(fixedRight) || isNaN(fixedRight.x) || isNaN(fixedRight.y) || isNaN(fixedRight.z)) {
+                throw new DeveloperError('right created in camera limiter update is defined incorrectly.');
+            }
+
+            this.direction = fixedDirection;
+            this.up = fixedUp;
+            this.right = fixedRight;
+        }
+    }
+
+    /**
+     * @private
+     */
+    Camera.prototype._limitPosition = function() {
+        this.position = defined(this.cameraLimiter) ? this.cameraLimiter.closestLocationTo(this.position) : this.position;
+    }
 
     return Camera;
 });

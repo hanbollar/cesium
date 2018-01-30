@@ -65,8 +65,8 @@ define([
 
         this.boundingObject = options.boundingObject;
 
-        this.minHeadingPitchRoll = options.minimumHeadingPitchRoll;
-        this.maxHeadingPitchRoll = options.maximumHeadingPitchRoll;
+        this.minHeadingPitchRoll = HeadingPitchRoll.clone(options.minimumHeadingPitchRoll);
+        this.maxHeadingPitchRoll = HeadingPitchRoll.clone(options.maximumHeadingPitchRoll);
     }
 
     /**
@@ -168,8 +168,10 @@ define([
             return position;
         }
 
-        var distanceToCenter = Cartesian3.distance(position, center);
-        var locationOnSphereInDirection = radius * (position - center) / distanceToCenter + center;
+        var direction = Cartesian3.subtract(position, center, new Cartesian3());
+        Cartesian3.normalize(direction, direction);
+        Cartesian3.multiplyByScalar(direction, radius, direction);
+        var locationOnSphereInDirection = Cartesian3.add(direction, center, new Cartesian3());
 
         var distanceToLocOnSphere = Cartesian3.distance(locationOnSphereInDirection, center);
         var distanceToPosition = Cartesian3.distance(position, center);
@@ -192,10 +194,10 @@ define([
         }
 
         // convert world space positionToCheck to orientedBoundingBox's object space.
-        var twiceScale = Matrix3.IDENTITY * 2.0;
-        var actualScaleTransform = this.boundingObject.halfAxes * twiceScale;
-        var inverseTransformationMatrix = Matrix3.inverse(actualScaleTransform, Matrix3.IDENTITY);
-        var positionInObjectSpace = inverseTransformationMatrix * position;
+        var twiceScale = Matrix3.fromUniformScale(2.0);
+        var actualScaleTransform = Matrix3.multiply(this.boundingObject.halfAxes, twiceScale, new Matrix3.fromScale(1.0));
+        var inverseTransformationMatrix = Matrix3.inverse(actualScaleTransform, new Matrix3.fromScale(1.0));
+        var positionInObjectSpace = Matrix3.multiplyByVector(inverseTransformationMatrix, position, new Matrix3.fromScale(1.0));
 
         // once in object space just check if converted location is within axis oriented unit cube (bc we did actual scale instead of half axes)
         var minimum = new Cartesian3(-0.5, -0.5, -0.5);
@@ -207,15 +209,15 @@ define([
         returningPosition.y = Math.max(minimum.y, Math.min(maximum.y, returningPosition.y));
         returningPosition.z = Math.max(minimum.z, Math.min(maximum.z, returningPosition.z));
 
-        return (Matrix3.inverse(inverseTransformationMatrix, Matrix3.IDENTITY) * returningPosition);
+        return Matrix3.multiplyByVector(Matrix3.inverse(inverseTransformationMatrix, new Matrix3.fromScale(1.0)), returningPosition, returningPosition);
     };
 
     /**
      * If inputted orientation is valid within the min and max {@link HeadingPitchRoll} limits defined for this limiter, returns orientation.
      * Otherwise returns closest valid orientation within the min and max {@link HeadingPitchRoll} limits defined for this limiter.
      *
-     * @param {Cartesian3|Cartographic} orientation The orientation we are checking to be between the limiter's min and max {@link HeadingPitchRoll} attributes.
-     * @return {Cartesian3|Cartographic} A valid orientation.
+     * @param {HeadingPitchRoll} orientation The orientation we are checking to be between the limiter's min and max {@link HeadingPitchRoll} attributes.
+     * @return {HeadingPitchRoll} A valid orientation.
      */
     CameraLimiter.prototype.closestOrientationTo = function(orientation) {
         //>>includeStart('debug', pragmas.debug);
