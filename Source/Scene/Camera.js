@@ -3250,12 +3250,12 @@ define([
 
     function limitOrientation(camera) {
         // modifies this camera directly
-
-        scratchOrientation.heading = camera.heading;
-        scratchOrientation.pitch = camera.pitch;
-        scratchOrientation.roll = camera.roll;
-
+        
         if (defined(camera.cameraLimiter)) {
+            scratchOrientation.heading = camera.heading;
+            scratchOrientation.pitch = camera.pitch;
+            scratchOrientation.roll = camera.roll;
+
             camera.cameraLimiter.limitOrientation(scratchOrientation, scratchOrientation);
             var rotQuat = Quaternion.fromHeadingPitchRoll(scratchOrientation, scratchSetViewQuaternion);
             var rotMat = Matrix3.fromQuaternion(rotQuat, scratchSetViewMatrix3);
