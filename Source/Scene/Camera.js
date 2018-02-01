@@ -3250,7 +3250,6 @@ define([
 
     function limitOrientation(camera) {
         // modifies this camera directly
-        
         if (defined(camera.cameraLimiter)) {
             scratchOrientation.heading = camera.heading;
             scratchOrientation.pitch = camera.pitch;
