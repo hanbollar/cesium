@@ -961,6 +961,9 @@ define([
             clampMove2D(this, this.position);
         }
 
+        limitOrientation(this);
+        limitPosition(this);
+
         var globe = this._scene.globe;
         var globeFinishedUpdating = !defined(globe) || (globe._surface.tileProvider.ready && globe._surface._tileLoadQueueHigh.length === 0 && globe._surface._tileLoadQueueMedium.length === 0 && globe._surface._tileLoadQueueLow.length === 0 && globe._surface._debug.tilesWaitingForChildren === 0);
         if (this._suspendTerrainAdjustment) {
@@ -1503,7 +1506,6 @@ define([
         if (this._mode === SceneMode.SCENE2D) {
             clampMove2D(this, cameraPosition);
         }
-        limitPosition(this);
 
         this._adjustOrthographicFrustum(true);
     };
@@ -1698,9 +1700,6 @@ define([
         Matrix3.multiplyByVector(rotation, direction, direction);
         Matrix3.multiplyByVector(rotation, up, up);
         Matrix3.multiplyByVector(rotation, right, right);
-
-        limitOrientation(this);
-
     };
 
     /**
@@ -1756,8 +1755,6 @@ define([
         Matrix3.multiplyByVector(rotation, this.up, this.up);
         Cartesian3.cross(this.direction, this.up, this.right);
         Cartesian3.cross(this.right, this.direction, this.up);
-
-        limitOrientation(this);
 
         this._adjustOrthographicFrustum(false);
     };
