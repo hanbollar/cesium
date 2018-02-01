@@ -6,6 +6,7 @@ define([
         './defined',
         './GeographicProjection',
         './Intersect',
+        './Math',
         './Rectangle'
     ], function(
         Cartesian2,
@@ -15,6 +16,7 @@ define([
         defined,
         GeographicProjection,
         Intersect,
+        CesiumMath,
         Rectangle) {
     'use strict';
 
@@ -316,6 +318,23 @@ define([
         }
 
         return Intersect.OUTSIDE;
+    };
+
+    /**
+     * @private
+     */
+    BoundingRectangle.closestLocationIn = function(position, boundingObject) {
+        var rect = boundingObject;
+
+        if (defined(boundingObject)) {
+            var rectMinimum = new Cartesian2(rect.x, rect.y);
+            var rectMaximum = new Cartesian2(rect.x + rect.width, rect.y + rect.height);
+            // var returningPosition = new Cartesian2(position.x, position.y);
+
+            position.x = CesiumMath.clamp(position.x, rectMinimum.x, rectMaximum.x);
+            position.y = CesiumMath.clamp(position.y, rectMinimum.y, rectMaximum.y);
+        }
+        return position;
     };
 
     /**

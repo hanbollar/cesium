@@ -988,9 +988,6 @@ define([
         Matrix4.multiplyByPointAsVector(inverse, up, this.up);
         Cartesian3.cross(this.direction, this.up, this.right);
 
-        this._limitOrientation();
-        this._limitPosition();
-
         updateMembers(this);
     };
 
@@ -1259,10 +1256,6 @@ define([
         scratchHpr.pitch = defaultValue(orientation.pitch, -CesiumMath.PI_OVER_TWO);
         scratchHpr.roll = defaultValue(orientation.roll, 0.0);
 
-        if (defined(this.cameraLimiter)) {
-            scratchHpr = this.cameraLimiter.closestOrientationTo(scratchHpr);
-        }
-
         this._suspendTerrainAdjustment = true;
 
         if (mode === SceneMode.SCENE3D) {
@@ -1510,7 +1503,7 @@ define([
         if (this._mode === SceneMode.SCENE2D) {
             clampMove2D(this, cameraPosition);
         }
-        this._limitPosition();
+        _limitPosition(this);
 
         this._adjustOrthographicFrustum(true);
     };
@@ -1706,7 +1699,7 @@ define([
         Matrix3.multiplyByVector(rotation, up, up);
         Matrix3.multiplyByVector(rotation, right, right);
 
-        this._limitOrientation();
+        _limitOrientation(angle, this);
 
     };
 
@@ -1764,7 +1757,7 @@ define([
         Cartesian3.cross(this.direction, this.up, this.right);
         Cartesian3.cross(this.right, this.direction, this.up);
 
-        this._limitOrientation();
+        _limitOrientation(angle, this);
 
         this._adjustOrthographicFrustum(false);
     };
@@ -2141,9 +2134,6 @@ define([
         Cartesian3.normalize(this.right, this.right);
         Cartesian3.cross(this.right, this.direction, this.up);
         Cartesian3.normalize(this.up, this.up);
-
-        this._limitOrientation();
-        this._limitPosition();
 
         this._adjustOrthographicFrustum(true);
     };
@@ -2832,7 +2822,6 @@ define([
         var orientation = defaultValue(options.orientation, defaultValue.EMPTY_OBJECT);
         if (defined(orientation.direction)) {
             orientation = directionUpToHeadingPitchRoll(this, destination, orientation, scratchSetViewOptions.orientation);
-            orientation = Camera._limitOrientation(orientation, this.cameraLimiter);
         }
 
         if (defined(options.duration) && options.duration <= 0.0) {
@@ -2853,7 +2842,6 @@ define([
         var isRectangle = defined(destination.west);
         if (isRectangle) {
             destination = this.getRectangleCameraCoordinates(destination, scratchFlyToDestination);
-            destination = Camera._limitPosition(destination, this.cameraLimiter);
         }
 
         var that = this;
@@ -3271,64 +3259,26 @@ define([
      * @callback Camera~FlightCancelledCallback
      */
 
-    /**
-     * @private
-     */
-    Camera.prototype._limitOrientation = function() {
-        var orientation = {
-            direction : this.direction,
-            up : this.up,
-            right : this.right
-        };
-        return Camera._limitOrientation(orientation, this.cameraLimiter);
-    }
+    function _limitOrientation(angle, camera) {
+        var minCheck = (angle < 0);
+        var maxCheck = (angle > 0);
+        var orientation = new HeadingPitchRoll(camera.heading, camera.pitch, camera.roll);
 
-    /**
-     * @private
-     */
-    Camera._limitOrientation = function(orientation, limiter) {
+        if (defined(camera.cameraLimiter)) {
+            orientation = camera.cameraLimiter.closestOrientationTo(orientation, minCheck, maxCheck);
+            var rotQuat = Quaternion.fromHeadingPitchRoll(orientation, scratchSetViewQuaternion);
+            var rotMat = Matrix3.fromQuaternion(rotQuat, scratchSetViewMatrix3);
 
-
-        // TODO - REWRITE -----
-
-
-        if (!defined(limiter)) {
-            return orientation;
+            Matrix3.getColumn(rotMat, 0, camera.direction);
+            Matrix3.getColumn(rotMat, 2, camera.up);
+            Cartesian3.cross(camera.direction, camera.up, camera.right);
         }
-
-        var hpr = new HeadingPitchRoll();
-        directionUpToHeadingPitchRoll(camera, camera.position, orientation, hpr);
-        var headingCheck = limiter.closestOrientationTo(hpr);
-        var fixed = Transforms.headingPitchRollToFixedFrame(camera.position, headingCheck, new Matrix4());
-
-        var fixedDirection = Matrix3.getColumn(fixed, 2, new Cartesian3());
-        Cartesian3.multiplyByScalar(fixedDirection, -1, fixedDirection);
-        var fixedUp = Matrix3.getColumn(fixed, 1, new Cartesian3());
-        var fixedRight = Matrix3.getColumn(fixed, 0, new Cartesian3());
-
-        orientation.direction = fixedDirection;
-        orientation.up = fixedUp;
-        orientation.right = fixedRight;
-
-        return orientation;
     };
 
-    /**
-     * @private
-     */
-    Camera.prototype._limitPosition = function() {
-        return Camera._limitPosition(this.position, this.cameraLimiter);
-    }
-
-    /**
-     * @private
-     */
-    Camera._limitPosition = function(position, limiter) {
-        if (defined(limiter)) {
-            position = limiter.closestLocationTo(position);
+    function _limitPosition(camera) {
+        if (defined(camera.cameraLimiter)) {
+            camera.position = camera.cameraLimiter.closestLocationIn(camera.position);
         }
-        return position;
-
     };
 
     return Camera;

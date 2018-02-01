@@ -3,13 +3,15 @@ define([
         './Check',
         './defaultValue',
         './defined',
-        './Intersect'
+        './Intersect',
+        './Math'
     ], function(
         Cartesian3,
         Check,
         defaultValue,
         defined,
-        Intersect) {
+        Intersect,
+        CesiumMath) {
     'use strict';
 
     /**
@@ -189,6 +191,18 @@ define([
         }
 
         return Intersect.INTERSECTING;
+    };
+
+    /**
+     * @private
+     */
+    AxisAlignedBoundingBox.closestLocationIn = function(position, boundingObject) {
+        if (defined(boundingObject)) {
+            position.x = CesiumMath.clamp(position.x, boundingObject.minimum.x, boundingObject.maximum.x);
+            position.y = CesiumMath.clamp(position.y, boundingObject.minimum.y, boundingObject.maximum.y);
+            position.z = CesiumMath.clamp(position.z, boundingObject.minimum.z, boundingObject.maximum.z);
+        }
+        return position;
     };
 
     /**

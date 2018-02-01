@@ -1199,6 +1199,33 @@ define([
     };
 
     /**
+     * @private
+     */
+    BoundingSphere.closestLocationIn = function(position, boundingObject) {
+        if (defined(boundingObject)) {
+            var center = boundingObject.center;
+            var radius = boundingObject.radius;
+
+            // to avoid dividing by zero check if same location as center
+            if (position.equals(center)) {
+                return position;
+            }
+            // check if already within sphere
+            if (Cartesian3.distance(position, center) < radius) {
+                return position;
+            }
+
+            var direction = new Cartesian3();
+            Cartesian3.subtract(position, center, direction);
+            Cartesian3.normalize(direction, direction);
+            Cartesian3.multiplyByScalar(direction, radius, direction);
+
+            position = Cartesian3.add(direction, center, new Cartesian3());
+        }
+        return position;
+    };
+
+    /**
      * Determines whether or not a sphere is hidden from view by the occluder.
      *
      * @param {BoundingSphere} sphere The bounding sphere surrounding the occludee object.

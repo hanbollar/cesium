@@ -88,142 +88,36 @@ define([
     /**
      * @private
      */
-    CameraLimiter.prototype.closestLocationTo = function(position) {
+    CameraLimiter.prototype.closestLocationIn = function(position) {
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.object(position, 'Cartesian3');
         //>>includeEnd('debug');
 
-        if (!defined(this.boundingObject)) {
-            return position;
+        if (defined(this.boundingObject)) {
+            position = this.boundingObject.closestLocationIn(position);
         }
-
-        if (this.boundingObject instanceof AxisAlignedBoundingBox) {
-            return this._closestLocationInAxisAligned(position);
-        } else if (this.boundingObject instanceof BoundingRectangle) {
-            return this._closestLocationInBoundingRectangle(position);
-        } else if (this.boundingObject instanceof BoundingSphere) {
-            return this._closestLocationInBoundingSphere(position);
-        } else if (this.boundingObject instanceof OrientedBoundingBox) {
-            return this._closestLocationInOrientedBoundingBox(position);
-        }
-        //>>includeStart('debug', pragmas.debug);
-        throw new DeveloperError('Bounding Object not of allowed type. '
-                                 + 'Must be AxisAlignedBoundingBox|BoundingRectangle|BoundingSphere|OrientedBoundingBox');
-        //>>includeEnd('debug');
-    };
-
-    /**
-     * @private
-     */
-    CameraLimiter.prototype._closestLocationInAxisAligned = function(position) {
-        var axisAlignedMinimum = this.boundingObject.minimum;
-        var axisAlignedMaximum = this.boundingObject.maximum;
-
-        position.x = Math.max(axisAlignedMinimum.x, Math.min(axisAlignedMaximum.x, position.x));
-        position.y = Math.max(axisAlignedMinimum.y, Math.min(axisAlignedMaximum.y, position.y));
-        position.z = Math.max(axisAlignedMinimum.z, Math.min(axisAlignedMaximum.z, position.z));
-
         return position;
     };
 
     /**
      * @private
      */
-    CameraLimiter.prototype._closestLocationInBoundingRectangle = function(position) {
-        var rect = this.boundingObject;
-
-        var rectMinimum = new Cartesian2(rect.x, rect.y);
-        var rectMaximum = new Cartesian2(rect.x + rect.width, rect.y + rect.height);
-        var returningPosition = new Cartesian2(position.x, position.y);
-
-        returningPosition.x = Math.max(rectMinimum.x, Math.min(rectMaximum.x, returningPosition.x));
-        returningPosition.y = Math.max(rectMinimum.y, Math.min(rectMaximum.y, returningPosition.y));
-
-        return new Cartesian3(returningPosition.x, returningPosition.y, position.z);
-    };
-
-    /**
-     * @private
-     */
-    CameraLimiter.prototype._closestLocationInBoundingSphere = function(position) {
-        var center = this.boundingObject.center;
-        var radius = this.boundingObject.radius;
-
-        // to avoid dividing by zero check if same location as center
-        if (position.equals(center)) {
-            return position;
-        }
-        // check if already within sphere
-        if (Cartesian3.distance(position, center) < radius) {
-            return position;
-        }
-
-        var offset = 0.0005;
-        var direction = new Cartesian3();
-        Cartesian3.subtract(position, center, direction);
-        Cartesian3.normalize(direction, direction);
-        Cartesian3.multiplyByScalar(direction, radius - offset, direction);
-        return Cartesian3.add(direction, center, new Cartesian3());
-    };
-
-    /**
-     * @private
-     */
-    CameraLimiter.prototype._closestLocationInOrientedBoundingBox = function(position) {
-        // to avoid inverse of a zero matrix (since that doesn't exist).
-        if (this.boundingObject.halfAxes.equals(Matrix3.ZERO)) {
-            return (position.equals(Cartesian3.ZERO));
-        }
-
-        // convert world space positionToCheck to orientedBoundingBox's object space.
-        var twiceScale = Matrix3.fromUniformScale(2.0);
-        var actualScaleTransform = Matrix3.multiply(this.boundingObject.halfAxes, twiceScale, new Matrix3.fromScale(1.0));
-        var inverseTransformationMatrix = Matrix3.inverse(actualScaleTransform, new Matrix3.fromScale(1.0));
-        var positionInObjectSpace = Matrix3.multiplyByVector(inverseTransformationMatrix, position, new Matrix3.fromScale(1.0));
-
-        // once in object space just check if converted location is within axis oriented unit cube (bc we did actual scale instead of half axes)
-        var minimum = new Cartesian3(-0.5, -0.5, -0.5);
-        var maximum = new Cartesian3(0.5, 0.5, 0.5);
-
-        var returningPosition = positionInObjectSpace;
-
-        returningPosition.x = CesiumMath.clamp(returningPosition.x, minimum.x, maximum.x);
-        returningPosition.y = CesiumMath.clamp(returningPosition.y, minimum.y, maximum.y);
-        returningPosition.z = CesiumMath.clamp(returningPosition.z, minimum.z, maximum.z);
-
-        return Matrix3.multiplyByVector(Matrix3.inverse(inverseTransformationMatrix, new Matrix3.fromScale(1.0)), returningPosition, returningPosition);
-
-
-        /// - Cesium.Matrix3.getScale... Math.clamp
-    };
-
-    /**
-     * @private
-     */
-    CameraLimiter.prototype.closestOrientationTo = function(orientation) {
+    CameraLimiter.prototype.closestOrientationTo = function(orientation, minCheck, maxCheck) {
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.object(orientation, 'HeadingPitchRoll');
-
-        // if min is defined, max must also be. if min is not defined, max must also not be.
-        if (!defined(this.minHeadingPitchRoll) && defined(this.maxHeadingPitchRoll)) {
-            throw new DeveloperError('minHeadingPitchRoll is required.');
-        }
-        if (defined(this.minHeadingPitchRoll) && !defined(this.maxHeadingPitchRoll)) {
-            throw new DeveloperError('maxHeadingPitchRoll is required.');
-        }
         //>>includeEnd('debug');
 
-        if(!defined(this.minHeadingPitchRoll)) {
-            return orientation;
+        if (minCheck) {
+            orientation.heading = Math.max(this.minHeadingPitchRoll.heading, orientation.heading);
+            orientation.pitch = Math.max(this.minHeadingPitchRoll.pitch, orientation.pitch);
+            orientation.roll = Math.max(this.minHeadingPitchRoll.roll, orientation.roll);
         }
-
-        var returningOrientation = orientation;
-
-        returningOrientation.heading = CesiumMath.clamp(returningOrientation.heading, this.minHeadingPitchRoll.heading, this.maxHeadingPitchRoll.heading);
-        returningOrientation.pitch = CesiumMath.clamp(returningOrientation.pitch, this.minHeadingPitchRoll.pitch, this.maxHeadingPitchRoll.pitch);
-        returningOrientation.roll = CesiumMath.clamp(returningOrientation.roll, this.minHeadingPitchRoll.roll, this.maxHeadingPitchRoll.roll);
-
-        return returningOrientation;
+        if (maxCheck) {
+            orientation.heading = Math.min(this.maxHeadingPitchRoll.heading, orientation.heading);
+            orientation.pitch = Math.min(this.maxHeadingPitchRoll.pitch, orientation.pitch);
+            orientation.roll = Math.min(this.maxHeadingPitchRoll.roll, orientation.roll);
+        }
+        return orientation;
     };
 
     /**
@@ -239,14 +133,6 @@ define([
 
         if (defined(limiter.boundingObject)) {
             limiter.boundingObject.clone(result.boundingObject);
-        }
-
-        // if min is defined, max must also be. if min is not defined, max must also not be.
-        if (!defined(this.minHeadingPitchRoll) && defined(this.maxHeadingPitchRoll)) {
-            throw new DeveloperError('minHeadingPitchRoll is required.');
-        }
-        if (defined(this.minHeadingPitchRoll) && !defined(this.maxHeadingPitchRoll)) {
-            throw new DeveloperError('maxHeadingPitchRoll is required.');
         }
 
         if (defined(limiter.minHeadingPitchRoll)) {
