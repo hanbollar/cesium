@@ -56,89 +56,80 @@ define([
      * @alias CameraLimiter
      * @constructor
      *
-     * @param {AxisAlignedBoundingObject|BoundingRectangle|BoundingSphere|OrientedBoundingBox} [options.boundingObject = undefined] Assigned to the boundingObject attribute which can be used to specify limits on locations.
-     * @param {HeadingPitchRoll} [options.minimumHeadingPitchRoll=undefined] Assigned to the minHeadingPitchRoll attribute which can be used to limit the minimum orientation.
-     * @param {HeadingPitchRoll} [options.maximumHeadingPitchRoll=undefined] Assigned to the maxHeadingPitchRoll attribute which can be used to limit the maximum orientation.
+     * @param {AxisAlignedBoundingBox|BoundingRectangle|BoundingSphere|OrientedBoundingBox} [options.boundingObject] Assigned to the boundingObject attribute which can be used to specify limits on locations.
+     * @param {HeadingPitchRoll} [options.minimumHeadingPitchRoll] Assigned to the minHeadingPitchRoll attribute which can be used to limit the minimum orientation.
+     * @param {HeadingPitchRoll} [options.maximumHeadingPitchRoll] Assigned to the maxHeadingPitchRoll attribute which can be used to limit the maximum orientation.
      */
     function CameraLimiter(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
+        /**
+         * The BoundingObject.
+         * @type {AxisAlignedBoundingBox|BoundingRectangle|BoundingSphere|OrientedBoundingBox}
+         * @default undefined
+         */
         this.boundingObject = options.boundingObject;
 
+        /**
+         * The minimum orientation values.
+         * @type {HeadingPitchRoll}
+         * @default undefined
+         */
         this.minHeadingPitchRoll = HeadingPitchRoll.clone(options.minimumHeadingPitchRoll);
+
+        /**
+         * The maximum orientation values.
+         * @type {HeadingPitchRoll}
+         * @default undefined
+         */
         this.maxHeadingPitchRoll = HeadingPitchRoll.clone(options.maximumHeadingPitchRoll);
     }
 
     /**
-     * If inputted position is valid in bounding object, returns position. Otherwise returns closest valid location on the bounding object to the position.
-     *
-     * @param {Cartesian3|Cartographic} position The position we are using to check for a valid location in the bounding object.
-     * @return {Cartesian3|Cartographic} A valid location.
+     * @private
      */
     CameraLimiter.prototype.closestLocationTo = function(position) {
         //>>includeStart('debug', pragmas.debug);
-        Check.defined('positionToCheck', position);
-        if (!(position instanceof Cartesian3) && !(position instanceof Cartographic)) {
-            throw new DeveloperError('positionToCheck required to be of type Cartesian3 or Cartographic.');
-        }
+        Check.typeOf.object(position, 'Cartesian3');
         //>>includeEnd('debug');
 
         if (!defined(this.boundingObject)) {
             return position;
         }
 
-        var cartesianPosition = (position instanceof Cartographic) ? Cartographic.toCartesian(position) : position;
-
         if (this.boundingObject instanceof AxisAlignedBoundingBox) {
-            cartesianPosition = this._closestLocationInAxisAligned(cartesianPosition);
+            return this._closestLocationInAxisAligned(position);
         } else if (this.boundingObject instanceof BoundingRectangle) {
-            cartesianPosition = this._closestLocationInBoundingRectangle(cartesianPosition);
+            return this._closestLocationInBoundingRectangle(position);
         } else if (this.boundingObject instanceof BoundingSphere) {
-            cartesianPosition = this._closestLocationInBoundingSphere(cartesianPosition);
+            return this._closestLocationInBoundingSphere(position);
         } else if (this.boundingObject instanceof OrientedBoundingBox) {
-            cartesianPosition = this._closestLocationInOrientedBoundingBox(cartesianPosition);
-        } else {
-            //>>includeStart('debug', pragmas.debug);
-            throw new DeveloperError('Bounding Object not of allowed type. '
-                                     + 'Must be AxisAlignedBoundingBox|BoundingRectangle|BoundingSphere|OrientedBoundingBox');
-            //>>includeEnd('debug');
+            return this._closestLocationInOrientedBoundingBox(position);
         }
-
-        return (position instanceof Cartographic) ? Cartographic.fromCartesian(cartesianPosition) : cartesianPosition;
+        //>>includeStart('debug', pragmas.debug);
+        throw new DeveloperError('Bounding Object not of allowed type. '
+                                 + 'Must be AxisAlignedBoundingBox|BoundingRectangle|BoundingSphere|OrientedBoundingBox');
+        //>>includeEnd('debug');
     };
 
     /**
      * @private
      */
     CameraLimiter.prototype._closestLocationInAxisAligned = function(position) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.defined('this.boundingObject.minimum', this.boundingObject.minimum);
-        Check.defined('this.boundingObject.maximum', this.boundingObject.maximum);
-        Check.defined('this.boundingObject.center', this.boundingObject.center);
-        //>>includeEnd('debug');
-
         var axisAlignedMinimum = this.boundingObject.minimum;
         var axisAlignedMaximum = this.boundingObject.maximum;
-        var returningPosition = position;
 
-        returningPosition.x = Math.max(axisAlignedMinimum.x, Math.min(axisAlignedMaximum.x, returningPosition.x));
-        returningPosition.y = Math.max(axisAlignedMinimum.y, Math.min(axisAlignedMaximum.y, returningPosition.y));
-        returningPosition.z = Math.max(axisAlignedMinimum.z, Math.min(axisAlignedMaximum.z, returningPosition.z));
+        position.x = Math.max(axisAlignedMinimum.x, Math.min(axisAlignedMaximum.x, position.x));
+        position.y = Math.max(axisAlignedMinimum.y, Math.min(axisAlignedMaximum.y, position.y));
+        position.z = Math.max(axisAlignedMinimum.z, Math.min(axisAlignedMaximum.z, position.z));
 
-        return returningPosition;
+        return position;
     };
 
     /**
      * @private
      */
     CameraLimiter.prototype._closestLocationInBoundingRectangle = function(position) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.defined('this.boundingObject.x', this.boundingObject.x);
-        Check.defined('this.boundingObject.y', this.boundingObject.y);
-        Check.defined('this.boundingObject.width', this.boundingObject.width);
-        Check.defined('this.boundingObject.height', this.boundingObject.height);
-        //>>includeEnd('debug');
-
         var rect = this.boundingObject;
 
         var rectMinimum = new Cartesian2(rect.x, rect.y);
@@ -155,43 +146,30 @@ define([
      * @private
      */
     CameraLimiter.prototype._closestLocationInBoundingSphere = function(position) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.defined('this.boundingObject.radius', this.boundingObject.radius);
-        Check.defined('this.boundingObject.center', this.boundingObject.center);
-        //>>includeEnd('debug');
-
         var center = this.boundingObject.center;
         var radius = this.boundingObject.radius;
 
-        // to avoid dividing by zero check if same location as center.
+        // to avoid dividing by zero check if same location as center
         if (position.equals(center)) {
             return position;
         }
+        // check if already within sphere
+        if (Cartesian3.distance(position, center) < radius) {
+            return position;
+        }
 
-        // convert to cartographic and check if at appropriate height - sphere radius - if not then clarify
-        // var cartographicRep = Cartographic.fromCartesian(position);
-        // if (cartographicRep.height > )
-
-        var direction = Cartesian3.subtract(center, position, new Cartesian3());
+        var offset = 0.0005;
+        var direction = new Cartesian3();
+        Cartesian3.subtract(position, center, direction);
         Cartesian3.normalize(direction, direction);
-        Cartesian3.multiplyByScalar(direction, radius, direction);
-        var locationOnSphereInDirection = Cartesian3.add(direction, center, new Cartesian3());
-
-        var distanceToLocOnSphere = Cartesian3.distanceSquared(locationOnSphereInDirection, center);
-        var distanceToPosition = Cartesian3.distanceSquared(position, center);
-
-        return (distanceToPosition < distanceToLocOnSphere || distanceToPosition) ? position : locationOnSphereInDirection;
+        Cartesian3.multiplyByScalar(direction, radius - offset, direction);
+        return Cartesian3.add(direction, center, new Cartesian3());
     };
 
     /**
      * @private
      */
     CameraLimiter.prototype._closestLocationInOrientedBoundingBox = function(position) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.defined('this.boundingObject.center', this.boundingObject.center);
-        Check.defined('this.boundingObject.halfAxes', this.boundingObject.halfAxes);
-        //>>includeEnd('debug');
-
         // to avoid inverse of a zero matrix (since that doesn't exist).
         if (this.boundingObject.halfAxes.equals(Matrix3.ZERO)) {
             return (position.equals(Cartesian3.ZERO));
@@ -209,26 +187,22 @@ define([
 
         var returningPosition = positionInObjectSpace;
 
-        returningPosition.x = Math.max(minimum.x, Math.min(maximum.x, returningPosition.x));
-        returningPosition.y = Math.max(minimum.y, Math.min(maximum.y, returningPosition.y));
-        returningPosition.z = Math.max(minimum.z, Math.min(maximum.z, returningPosition.z));
+        returningPosition.x = CesiumMath.clamp(returningPosition.x, minimum.x, maximum.x);
+        returningPosition.y = CesiumMath.clamp(returningPosition.y, minimum.y, maximum.y);
+        returningPosition.z = CesiumMath.clamp(returningPosition.z, minimum.z, maximum.z);
 
         return Matrix3.multiplyByVector(Matrix3.inverse(inverseTransformationMatrix, new Matrix3.fromScale(1.0)), returningPosition, returningPosition);
+
+
+        /// - Cesium.Matrix3.getScale... Math.clamp
     };
 
     /**
-     * If inputted orientation is valid within the min and max {@link HeadingPitchRoll} limits defined for this limiter, returns orientation.
-     * Otherwise returns closest valid orientation within the min and max {@link HeadingPitchRoll} limits defined for this limiter.
-     *
-     * @param {HeadingPitchRoll} orientation The orientation we are checking to be between the limiter's min and max {@link HeadingPitchRoll} attributes.
-     * @return {HeadingPitchRoll} A valid orientation.
+     * @private
      */
     CameraLimiter.prototype.closestOrientationTo = function(orientation) {
         //>>includeStart('debug', pragmas.debug);
-        Check.defined('orientation', orientation);
-        if (!(orientation instanceof HeadingPitchRoll)) {
-            throw new DeveloperError('orientation required to be of type HeadingPitchRoll.');
-        }
+        Check.typeOf.object(orientation, 'HeadingPitchRoll');
 
         // if min is defined, max must also be. if min is not defined, max must also not be.
         if (!defined(this.minHeadingPitchRoll) && defined(this.maxHeadingPitchRoll)) {
@@ -245,9 +219,9 @@ define([
 
         var returningOrientation = orientation;
 
-        returningOrientation.heading = Math.max(this.minHeadingPitchRoll.heading, Math.min(this.maxHeadingPitchRoll.heading, returningOrientation.heading));
-        returningOrientation.pitch = Math.max(this.minHeadingPitchRoll.pitch, Math.min(this.maxHeadingPitchRoll.pitch, returningOrientation.pitch));
-        returningOrientation.roll = Math.max(this.minHeadingPitchRoll.roll, Math.min(this.maxHeadingPitchRoll.roll, returningOrientation.roll));
+        returningOrientation.heading = CesiumMath.clamp(returningOrientation.heading, this.minHeadingPitchRoll.heading, this.maxHeadingPitchRoll.heading);
+        returningOrientation.pitch = CesiumMath.clamp(returningOrientation.pitch, this.minHeadingPitchRoll.pitch, this.maxHeadingPitchRoll.pitch);
+        returningOrientation.roll = CesiumMath.clamp(returningOrientation.roll, this.minHeadingPitchRoll.roll, this.maxHeadingPitchRoll.roll);
 
         return returningOrientation;
     };
@@ -260,24 +234,11 @@ define([
      */
     CameraLimiter.clone = function(limiter, result) {
         if (!defined(result)) {
-            var options = {};
-            result = new CameraLimiter(options);
+            result = new CameraLimiter();
         }
 
-        if (!defined(limiter.boundingObject)) {
-            result.boundingObject = undefined;
-        } else if (limiter.boundingObject instanceof AxisAlignedBoundingBox) {
-            result.boundingObject = AxisAlignedBoundingBox.clone(limiter.boundingObject, result.boundingObject);
-        } else if (limiter.boundingObject instanceof BoundingRectangle) {
-            result.boundingObject = BoundingRectangle.clone(limiter.boundingObject, result.boundingObject);
-        } else if (limiter.boundingObject instanceof BoundingSphere) {
-            result.boundingObject = BoundingSphere.clone(limiter.boundingObject, result.boundingObject);
-        } else if (limiter.boundingObject instanceof OrientedBoundingBox) {
-            result.boundingObject = OrientedBoundingBox.clone(limiter.boundingObject, result.boundingObject);
-        } else {
-            //>>includeStart('debug', pragmas.debug);
-            throw new DeveloperError('bounding object is not of an allowed type');
-            //>>includeEnd('debug');
+        if (defined(limiter.boundingObject)) {
+            limiter.boundingObject.clone(result.boundingObject);
         }
 
         // if min is defined, max must also be. if min is not defined, max must also not be.
@@ -290,8 +251,8 @@ define([
 
         if (defined(limiter.minHeadingPitchRoll)) {
             // because of allLimiterValuesCreatedProperly - if min exists, max must too
-            result.minHeadingPitchRoll = HeadingPitchRoll.clone(limiter.minHeadingPitchRoll);
-            result.maxHeadingPitchRoll = HeadingPitchRoll.clone(limiter.maxHeadingPitchRoll);
+            limiter.minHeadingPitchRoll.clone(result.minHeadingPitchRoll);
+            limiter.maxHeadingPitchRoll.clone(result.maxHeadingPitchRoll);
         }
 
         return result;

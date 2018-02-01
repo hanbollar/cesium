@@ -239,7 +239,6 @@ define([
         /**
          * If set, the camera will be constrained by location and viewing ability for moving and changes in the look vector.
          * @type {CameraLimiter}
-         * @default undefined
          */
         this.cameraLimiter = undefined;
     }
@@ -1146,9 +1145,6 @@ define([
     var scratchToHPRRight = new Cartesian3();
 
     function directionUpToHeadingPitchRoll(camera, position, orientation, result) {
-        if (!defined(result)) {
-            result = new HeadingPitchRoll();
-        }
 
         var direction = Cartesian3.clone(orientation.direction, scratchToHPRDirection);
         var up = Cartesian3.clone(orientation.up, scratchToHPRUp);
@@ -1507,7 +1503,6 @@ define([
         }
         //>>includeEnd('debug');
 
-        this._limitPosition();
         var cameraPosition = this.position;
         Cartesian3.multiplyByScalar(direction, amount, moveScratch);
         Cartesian3.add(cameraPosition, moveScratch, cameraPosition);
@@ -1515,6 +1510,8 @@ define([
         if (this._mode === SceneMode.SCENE2D) {
             clampMove2D(this, cameraPosition);
         }
+        this._limitPosition();
+
         this._adjustOrthographicFrustum(true);
     };
 
@@ -2835,7 +2832,7 @@ define([
         var orientation = defaultValue(options.orientation, defaultValue.EMPTY_OBJECT);
         if (defined(orientation.direction)) {
             orientation = directionUpToHeadingPitchRoll(this, destination, orientation, scratchSetViewOptions.orientation);
-            orientation = (defined(this.cameraLimiter)) ? this.cameraLimiter.closestOrientationTo(orientation) : orientation;
+            orientation = Camera._limitOrientation(orientation, this.cameraLimiter);
         }
 
         if (defined(options.duration) && options.duration <= 0.0) {
@@ -2856,8 +2853,8 @@ define([
         var isRectangle = defined(destination.west);
         if (isRectangle) {
             destination = this.getRectangleCameraCoordinates(destination, scratchFlyToDestination);
+            destination = Camera._limitPosition(destination, this.cameraLimiter);
         }
-        destination = (defined(this.cameraLimiter)) ? this.cameraLimiter.closestLocationTo(destination) : destination;
 
         var that = this;
         var flightTween;
@@ -3278,56 +3275,61 @@ define([
      * @private
      */
     Camera.prototype._limitOrientation = function() {
-        if (defined(this.cameraLimiter) && defined(this.cameraLimiter.minHeadingPitchRoll)) {
-            var orientation = {
-                direction : this.direction,
-                up : this.up,
-                right : this.right
-            }
-            var hpr = new HeadingPitchRoll();
-            hpr = directionUpToHeadingPitchRoll(this, this.position, orientation, hpr);
-            var headingCheck = this.cameraLimiter.closestOrientationTo(hpr);
-            var fixed = Transforms.headingPitchRollToFixedFrame(this.position, headingCheck, new Matrix4());
-
-            var fixedDirection = Matrix3.getColumn(fixed, 2, new Cartesian3());
-            Cartesian3.multiplyByScalar(fixedDirection, -1, fixedDirection);
-            var fixedUp = Matrix3.getColumn(fixed, 1, new Cartesian3());
-            var fixedRight = Matrix3.getColumn(fixed, 0, new Cartesian3());
-
-            if (!defined(fixedDirection) || isNaN(fixedDirection.x) || isNaN(fixedDirection.y) || isNaN(fixedDirection.z)) {
-                throw new DeveloperError('direction created in camera limiter update is defined incorrectly.');
-            }
-            if (!defined(fixedUp) || isNaN(fixedUp.x) || isNaN(fixedUp.y) || isNaN(fixedUp.z)) {
-                throw new DeveloperError('up created in camera limiter update is defined incorrectly.');
-            }
-            if (!defined(fixedRight) || isNaN(fixedRight.x) || isNaN(fixedRight.y) || isNaN(fixedRight.z)) {
-                throw new DeveloperError('right created in camera limiter update is defined incorrectly.');
-            }
-
-            this.direction = fixedDirection;
-            this.up = fixedUp;
-            this.right = fixedRight;
-
-            // console.log('orientation changed');
-            // console.log(this.orientation);
-        }
+        var orientation = {
+            direction : this.direction,
+            up : this.up,
+            right : this.right
+        };
+        return Camera._limitOrientation(orientation, this.cameraLimiter);
     }
 
     /**
      * @private
      */
-    Camera.prototype._limitPosition = function() {
-        // console.log('prev position:');
-        // console.log(Cartesian3.clone(this.position));
-        // console.log('curr height');
-        // console.log(Cartographic.fromCartesian(this.position).height);
-        this.position = defined(this.cameraLimiter) ? this.cameraLimiter.closestLocationTo(this.position) : this.position;
+    Camera._limitOrientation = function(orientation, limiter) {
 
-        // if (defined(this.cameraLimiter)) {
-        //     console.log('position changed');
-        //     console.log(this.position);
-        // }
+
+        // TODO - REWRITE -----
+
+
+        if (!defined(limiter)) {
+            return orientation;
+        }
+
+        var hpr = new HeadingPitchRoll();
+        directionUpToHeadingPitchRoll(camera, camera.position, orientation, hpr);
+        var headingCheck = limiter.closestOrientationTo(hpr);
+        var fixed = Transforms.headingPitchRollToFixedFrame(camera.position, headingCheck, new Matrix4());
+
+        var fixedDirection = Matrix3.getColumn(fixed, 2, new Cartesian3());
+        Cartesian3.multiplyByScalar(fixedDirection, -1, fixedDirection);
+        var fixedUp = Matrix3.getColumn(fixed, 1, new Cartesian3());
+        var fixedRight = Matrix3.getColumn(fixed, 0, new Cartesian3());
+
+        orientation.direction = fixedDirection;
+        orientation.up = fixedUp;
+        orientation.right = fixedRight;
+
+        return orientation;
+    };
+
+    /**
+     * @private
+     */
+    Camera.prototype._limitPosition = function() {
+        return Camera._limitPosition(this.position, this.cameraLimiter);
     }
+
+    /**
+     * @private
+     */
+    Camera._limitPosition = function(position, limiter) {
+        if (defined(limiter)) {
+            position = limiter.closestLocationTo(position);
+        }
+        return position;
+
+    };
 
     return Camera;
 });
