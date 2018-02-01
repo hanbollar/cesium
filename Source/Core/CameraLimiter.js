@@ -134,13 +134,9 @@ define([
         if (defined(limiter.boundingObject)) {
             limiter.boundingObject.clone(result.boundingObject);
         }
-
-        if (defined(limiter.minHeadingPitchRoll)) {
-            // because of allLimiterValuesCreatedProperly - if min exists, max must too
-            limiter.minHeadingPitchRoll.clone(result.minHeadingPitchRoll);
-            limiter.maxHeadingPitchRoll.clone(result.maxHeadingPitchRoll);
-        }
-
+        HeadingPitchRoll.clone(limiter.minHeadingPitchRoll, result.minHeadingPitchRoll);
+        HeadingPitchRoll.clone(limiter.maxHeadingPitchRoll, result.maxHeadingPitchRoll);
+        
         return result;
     };
 
