@@ -196,7 +196,7 @@ define([
     /**
      * @private
      */
-    AxisAlignedBoundingBox.projectedPoint = function(position, boundingObject, result) {
+    AxisAlignedBoundingBox.prototype.projectedPoint = function(position, boundingObject, result) {
         position.clone(result);
         if (defined(boundingObject)) {
             Cartesian3.subtract(position, boundingObject.center, result);

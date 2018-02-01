@@ -55,6 +55,7 @@ define([
     CameraLimiter.prototype.limitPosition = function(position, result) {
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.object('position', position);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         if (defined(this.boundingObject)) {
@@ -69,6 +70,7 @@ define([
     CameraLimiter.prototype.limitOrientation = function(orientation, result) {
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.object('orientation', orientation);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         if (defined(this.minHeadingPitchRoll)) {

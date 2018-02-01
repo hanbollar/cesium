@@ -1201,7 +1201,7 @@ define([
     /**
      * @private
      */
-    BoundingSphere.projectedPoint = function(position, boundingObject, result) {
+    BoundingSphere.prototype.projectedPoint = function(position, boundingObject, result) {
         position.clone(result);
         if (defined(boundingObject)) {
             var center = boundingObject.center;
