@@ -419,32 +419,36 @@ define([
         return result;
     };
 
+    var scratchMatrix3 = new Matrix3.fromScale(1.0);
+
     /**
      * @private
      */
-    OrientedBoundingBox.closestLocationIn = function(position, boundingObject) {
+    OrientedBoundingBox.projectedPoint = function(position, boundingObject, result) {
+        position.clone(result);
         if (defined(boundingObject)) {
             // to avoid inverse of a zero matrix (since that doesn't exist).
             if (this.boundingObject.halfAxes.equals(Matrix3.ZERO)) {
-                position = new Cartesian3();
-                return position;
+                result.x = 0.0;
+                result.y = 0.0;
+                result.z = 0.0;
+                return result;
             }
 
             // convert world space positionToCheck to orientedBoundingBox's object space.
-            var inverseTransformationMatrix = Matrix3.inverse(boundingObject.halfAxes, new Matrix3.fromScale(1.0));
-            var positionInObjectSpace = Matrix3.multiplyByVector(inverseTransformationMatrix, position, new Matrix3.fromScale(1.0));
+            var inverseTransformationMatrix = Matrix3.inverse(boundingObject.halfAxes, scratchMatrix3);
+            var positionInObjectSpace = Matrix3.multiplyByVector(inverseTransformationMatrix, result, scratchMatrix3);
 
-            // once in object space just check if converted location is within axis oriented 2x2x2 cube (bc half axes)
-            var minimum = new Cartesian3(-1.0, -1.0, -1.0);
-            var maximum = new Cartesian3(1.0, 1.0, 1.0);
+            // once in object space just translate to center and check if converted location is within axis oriented 2x2x2 cube (bc half axes)
+            Cartesian3.subtract(result, boundingObject.center, result);
+            result.x = CesiumMath.clamp(result.x, -1.0, 1.0);
+            result.y = CesiumMath.clamp(result.y, -1.0, 1.0);
+            result.z = CesiumMath.clamp(result.z, -1.0, 1.0);
+            Cartesian3.add(position, boundingObject.center, result);
 
-            positionInObjectSpace.x = CesiumMath.clamp(positionInObjectSpace.x, minimum.x, maximum.x);
-            positionInObjectSpace.y = CesiumMath.clamp(positionInObjectSpace.y, minimum.y, maximum.y);
-            positionInObjectSpace.z = CesiumMath.clamp(positionInObjectSpace.z, minimum.z, maximum.z);
-
-            Matrix3.multiplyByVector(boundingObject.halfAxes, positionInObjectSpace, position);
+            Matrix3.multiplyByVector(boundingObject.halfAxes, positionInObjectSpace, result);
         }
-        return position;
+        return result;
     };
 
     /**

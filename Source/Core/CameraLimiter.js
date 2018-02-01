@@ -1,53 +1,17 @@
 define([
-    '../Core/AxisAlignedBoundingBox',
-    '../Core/BoundingRectangle',
-    '../Core/BoundingSphere',
-    '../Core/Cartesian2',
     '../Core/Cartesian3',
-    '../Core/Cartesian4',
-    '../Core/Cartographic',
     '../Core/Check',
     '../Core/defaultValue',
     '../Core/defined',
-    '../Core/defineProperties',
-    '../Core/DeveloperError',
-    '../Core/EasingFunction',
-    '../Core/Ellipsoid',
-    '../Core/EllipsoidGeodesic',
-    '../Core/Event',
-    '../Core/HeadingPitchRange',
     '../Core/HeadingPitchRoll',
-    '../Core/Intersect',
-    '../Core/IntersectionTests',
     '../Core/Math',
-    '../Core/Matrix3',
-    '../Core/Matrix4',
-    '../Core/OrientedBoundingBox'
+    '../Core/Matrix3'
 ], function(
-    AxisAlignedBoundingBox,
-    BoundingRectangle,
-    BoundingSphere,
-    Cartesian2,
     Cartesian3,
-    Cartesian4,
-    Cartographic,
     Check,
     defaultValue,
     defined,
-    defineProperties,
-    DeveloperError,
-    EasingFunction,
-    Ellipsoid,
-    EllipsoidGeodesic,
-    Event,
-    HeadingPitchRange,
-    HeadingPitchRoll,
-    Intersect,
-    IntersectionTests,
-    CesiumMath,
-    Matrix3,
-    Matrix4,
-    OrientedBoundingBox) {
+    HeadingPitchRoll) {
     'use strict';
 
     /**
@@ -56,7 +20,7 @@ define([
      * @alias CameraLimiter
      * @constructor
      *
-     * @param {AxisAlignedBoundingBox|BoundingRectangle|BoundingSphere|OrientedBoundingBox} [options.boundingObject] Assigned to the boundingObject attribute which can be used to specify limits on locations.
+     * @param {AxisAlignedBoundingBox|BoundingSphere|OrientedBoundingBox} [options.boundingObject] Assigned to the boundingObject attribute which can be used to specify limits on locations.
      * @param {HeadingPitchRoll} [options.minimumHeadingPitchRoll] Assigned to the minHeadingPitchRoll attribute which can be used to limit the minimum orientation.
      * @param {HeadingPitchRoll} [options.maximumHeadingPitchRoll] Assigned to the maxHeadingPitchRoll attribute which can be used to limit the maximum orientation.
      */
@@ -65,7 +29,7 @@ define([
 
         /**
          * The BoundingObject.
-         * @type {AxisAlignedBoundingBox|BoundingRectangle|BoundingSphere|OrientedBoundingBox}
+         * @type {AxisAlignedBoundingBox|BoundingSphere|OrientedBoundingBox}
          * @default undefined
          */
         this.boundingObject = options.boundingObject;
@@ -88,36 +52,36 @@ define([
     /**
      * @private
      */
-    CameraLimiter.prototype.closestLocationIn = function(position) {
+    CameraLimiter.prototype.limitPosition = function(position, result) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object(position, 'Cartesian3');
+        Check.typeOf.object(position, 'position');
         //>>includeEnd('debug');
 
         if (defined(this.boundingObject)) {
-            position = this.boundingObject.closestLocationIn(position);
+            this.boundingObject.projectedPoint(position, result);
         }
-        return position;
+        return result;
     };
 
     /**
      * @private
      */
-    CameraLimiter.prototype.closestOrientationTo = function(orientation, minCheck, maxCheck) {
+    CameraLimiter.prototype.limitOrientation = function(orientation, result) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object(orientation, 'HeadingPitchRoll');
+        Check.typeOf.object(orientation, 'orientation');
         //>>includeEnd('debug');
 
-        if (minCheck) {
-            orientation.heading = Math.max(this.minHeadingPitchRoll.heading, orientation.heading);
-            orientation.pitch = Math.max(this.minHeadingPitchRoll.pitch, orientation.pitch);
-            orientation.roll = Math.max(this.minHeadingPitchRoll.roll, orientation.roll);
+        if (defined(this.minHeadingPitchRoll)) {
+            result.heading = Math.max(this.minHeadingPitchRoll.heading, result.heading);
+            result.pitch = Math.max(this.minHeadingPitchRoll.pitch, result.pitch);
+            result.roll = Math.max(this.minHeadingPitchRoll.roll, result.roll);
         }
-        if (maxCheck) {
-            orientation.heading = Math.min(this.maxHeadingPitchRoll.heading, orientation.heading);
-            orientation.pitch = Math.min(this.maxHeadingPitchRoll.pitch, orientation.pitch);
-            orientation.roll = Math.min(this.maxHeadingPitchRoll.roll, orientation.roll);
+        if (defined(this.maxHeadingPitchRoll)) {
+            result.heading = Math.min(this.maxHeadingPitchRoll.heading, result.heading);
+            result.pitch = Math.min(this.maxHeadingPitchRoll.pitch, result.pitch);
+            result.roll = Math.min(this.maxHeadingPitchRoll.roll, result.roll);
         }
-        return orientation;
+        return result;
     };
 
     /**
@@ -136,7 +100,7 @@ define([
         }
         HeadingPitchRoll.clone(limiter.minHeadingPitchRoll, result.minHeadingPitchRoll);
         HeadingPitchRoll.clone(limiter.maxHeadingPitchRoll, result.maxHeadingPitchRoll);
-        
+
         return result;
     };
 

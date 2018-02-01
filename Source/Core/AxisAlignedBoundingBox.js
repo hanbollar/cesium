@@ -19,8 +19,8 @@ define([
      * @alias AxisAlignedBoundingBox
      * @constructor
      *
-     * @param {Cartesian3} [minimum=Cartesian3.ZERO] The minimum point along the x, y, and z axes.
-     * @param {Cartesian3} [maximum=Cartesian3.ZERO] The maximum point along the x, y, and z axes.
+     * @param {Cartesian3} [minimum=Cartesian3.ZERO] The minimum point along the x, y, and z axes relative to {@link AxisAlignedBoundingBox#center}.
+     * @param {Cartesian3} [maximum=Cartesian3.ZERO] The maximum point along the x, y, and z axes relative to {@link AxisAlignedBoundingBox#center}.
      * @param {Cartesian3} [center] The center of the box; automatically computed if not supplied.
      *
      * @see BoundingSphere
@@ -196,13 +196,16 @@ define([
     /**
      * @private
      */
-    AxisAlignedBoundingBox.closestLocationIn = function(position, boundingObject) {
+    AxisAlignedBoundingBox.projectedPoint = function(position, boundingObject, result) {
+        position.clone(result);
         if (defined(boundingObject)) {
-            position.x = CesiumMath.clamp(position.x, boundingObject.minimum.x, boundingObject.maximum.x);
-            position.y = CesiumMath.clamp(position.y, boundingObject.minimum.y, boundingObject.maximum.y);
-            position.z = CesiumMath.clamp(position.z, boundingObject.minimum.z, boundingObject.maximum.z);
+            Cartesian3.subtract(position, boundingObject.center, result);
+            result.x = CesiumMath.clamp(result.x, boundingObject.minimum.x, boundingObject.maximum.x);
+            result.y = CesiumMath.clamp(result.y, boundingObject.minimum.y, boundingObject.maximum.y);
+            result.z = CesiumMath.clamp(result.z, boundingObject.minimum.z, boundingObject.maximum.z);
+            Cartesian3.add(result, boundingObject.center, result);
         }
-        return position;
+        return result;
     };
 
     /**

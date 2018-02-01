@@ -1201,28 +1201,28 @@ define([
     /**
      * @private
      */
-    BoundingSphere.closestLocationIn = function(position, boundingObject) {
+    BoundingSphere.projectedPoint = function(position, boundingObject, result) {
+        position.clone(result);
         if (defined(boundingObject)) {
             var center = boundingObject.center;
             var radius = boundingObject.radius;
 
             // to avoid dividing by zero check if same location as center
-            if (position.equals(center)) {
-                return position;
+            if (result.equals(center)) {
+                return result;
             }
             // check if already within sphere
-            if (Cartesian3.distance(position, center) < radius) {
-                return position;
+            if (Cartesian3.distance(result, center) <= radius) {
+                return result;
             }
 
-            var direction = new Cartesian3();
-            Cartesian3.subtract(position, center, direction);
-            Cartesian3.normalize(direction, direction);
-            Cartesian3.multiplyByScalar(direction, radius, direction);
+            Cartesian3.subtract(result, center, result);
+            Cartesian3.normalize(result, result);
+            Cartesian3.multiplyByScalar(result, radius, result);
 
-            position = Cartesian3.add(direction, center, new Cartesian3());
+            Cartesian3.add(result, center, result);
         }
-        return position;
+        return result;
     };
 
     /**

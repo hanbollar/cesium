@@ -1503,7 +1503,7 @@ define([
         if (this._mode === SceneMode.SCENE2D) {
             clampMove2D(this, cameraPosition);
         }
-        _limitPosition(this);
+        limitPosition(this);
 
         this._adjustOrthographicFrustum(true);
     };
@@ -1699,7 +1699,7 @@ define([
         Matrix3.multiplyByVector(rotation, up, up);
         Matrix3.multiplyByVector(rotation, right, right);
 
-        _limitOrientation(angle, this);
+        limitOrientation(this);
 
     };
 
@@ -1757,7 +1757,7 @@ define([
         Cartesian3.cross(this.direction, this.up, this.right);
         Cartesian3.cross(this.right, this.direction, this.up);
 
-        _limitOrientation(angle, this);
+        limitOrientation(this);
 
         this._adjustOrthographicFrustum(false);
     };
@@ -3249,6 +3249,34 @@ define([
         return result;
     };
 
+    var scratchOrientation = new HeadingPitchRoll(0, 0, 0);
+
+    function limitOrientation(camera) {
+        // modifies this camera directly
+
+        scratchOrientation.heading = camera.heading;
+        scratchOrientation.pitch = camera.pitch;
+        scratchOrientation.roll = camera.roll;
+
+        if (defined(camera.cameraLimiter)) {
+            camera.cameraLimiter.limitOrientation(scratchOrientation, scratchOrientation);
+            var rotQuat = Quaternion.fromHeadingPitchRoll(scratchOrientation, scratchSetViewQuaternion);
+            var rotMat = Matrix3.fromQuaternion(rotQuat, scratchSetViewMatrix3);
+
+            Matrix3.getColumn(rotMat, 0, camera.direction);
+            Matrix3.getColumn(rotMat, 2, camera.up);
+            Cartesian3.cross(camera.direction, camera.up, camera.right);
+        }
+    };
+
+    function limitPosition(camera) {
+        // modifies this camera directly
+
+        if (defined(camera.cameraLimiter)) {
+            camera.cameraLimiter.limitPosition(camera.position, camera.position);
+        }
+    };
+
     /**
      * A function that will execute when a flight completes.
      * @callback Camera~FlightCompleteCallback
@@ -3258,28 +3286,6 @@ define([
      * A function that will execute when a flight is cancelled.
      * @callback Camera~FlightCancelledCallback
      */
-
-    function _limitOrientation(angle, camera) {
-        var minCheck = (angle < 0);
-        var maxCheck = (angle > 0);
-        var orientation = new HeadingPitchRoll(camera.heading, camera.pitch, camera.roll);
-
-        if (defined(camera.cameraLimiter)) {
-            orientation = camera.cameraLimiter.closestOrientationTo(orientation, minCheck, maxCheck);
-            var rotQuat = Quaternion.fromHeadingPitchRoll(orientation, scratchSetViewQuaternion);
-            var rotMat = Matrix3.fromQuaternion(rotQuat, scratchSetViewMatrix3);
-
-            Matrix3.getColumn(rotMat, 0, camera.direction);
-            Matrix3.getColumn(rotMat, 2, camera.up);
-            Cartesian3.cross(camera.direction, camera.up, camera.right);
-        }
-    };
-
-    function _limitPosition(camera) {
-        if (defined(camera.cameraLimiter)) {
-            camera.position = camera.cameraLimiter.closestLocationIn(camera.position);
-        }
-    };
 
     return Camera;
 });
