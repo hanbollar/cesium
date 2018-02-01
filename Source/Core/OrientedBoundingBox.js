@@ -42,8 +42,8 @@ define([
      *
      * @param {Cartesian3} [center=Cartesian3.ZERO] The center of the box.
      * @param {Matrix3} [halfAxes=Matrix3.ZERO] The three orthogonal half-axes of the bounding box.
-     *                                          Equivalently, the transformation matrix, to rotate and scale a 0x0x0
-     *                                          cube centered at the origin.
+     *                                          Equivalently, the transformation matrix, to rotate and scale a cube (by default 0x0x0)
+     *                                          centered at the origin.
      *
      *
      * @example
