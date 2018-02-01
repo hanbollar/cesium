@@ -3264,7 +3264,7 @@ define([
             Matrix3.getColumn(rotMat, 2, camera.up);
             Cartesian3.cross(camera.direction, camera.up, camera.right);
         }
-    };
+    }
 
     function limitPosition(camera) {
         // modifies this camera directly
@@ -3272,7 +3272,7 @@ define([
         if (defined(camera.cameraLimiter)) {
             camera.cameraLimiter.limitPosition(camera.position, camera.position);
         }
-    };
+    }
 
     /**
      * A function that will execute when a flight completes.
