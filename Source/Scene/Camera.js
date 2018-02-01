@@ -3250,7 +3250,8 @@ define([
 
     function limitOrientation(camera) {
         // modifies this camera directly
-        if (defined(camera.cameraLimiter)) {
+        if (defined(camera.cameraLimiter)
+            && (defined(camera.cameraLimiter.minHeadingPitchRoll) || defined(camera.cameraLimiter.maxHeadingPitchRoll))) {
             scratchOrientation.heading = camera.heading;
             scratchOrientation.pitch = camera.pitch;
             scratchOrientation.roll = camera.roll;
@@ -3268,7 +3269,7 @@ define([
     function limitPosition(camera) {
         // modifies this camera directly
 
-        if (defined(camera.cameraLimiter)) {
+        if (defined(camera.cameraLimiter) && defined(camera.cameraLimiter.boundingObject)) {
             camera.cameraLimiter.limitPosition(camera.position, camera.position);
         }
     }

@@ -73,16 +73,21 @@ define([
         Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
+        orientation.clone(result);
+        var modified = 0;
         if (defined(this.minHeadingPitchRoll)) {
+            modified++;
             result.heading = Math.max(this.minHeadingPitchRoll.heading, result.heading);
             result.pitch = Math.max(this.minHeadingPitchRoll.pitch, result.pitch);
             result.roll = Math.max(this.minHeadingPitchRoll.roll, result.roll);
         }
         if (defined(this.maxHeadingPitchRoll)) {
+            modified++;
             result.heading = Math.min(this.maxHeadingPitchRoll.heading, result.heading);
             result.pitch = Math.min(this.maxHeadingPitchRoll.pitch, result.pitch);
             result.roll = Math.min(this.maxHeadingPitchRoll.roll, result.roll);
         }
+        console.log(modified);
         return result;
     };
 
