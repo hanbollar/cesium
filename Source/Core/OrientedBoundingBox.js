@@ -419,7 +419,7 @@ define([
         return result;
     };
 
-    var scratchMatrix3 = new Matrix3.fromScale(1.0);
+    var scratchMatrix3 = new Matrix3();
 
     /**
      * @private
