@@ -146,7 +146,6 @@ var maxHeadingPitchRollDef = new Cesium.HeadingPitchRoll(25, 30, 20);
 var options = [{
     text : 'BoundingSphere',
     onselect : function() {
-        console.log(viewer.camera.position);
         viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
         viewer.camera.cameraLimiter.boundingObject = boundingSphere;
         viewer.camera.cameraLimiter.minHeadingPitchRoll = undefined;
@@ -156,7 +155,6 @@ var options = [{
     text : 'AxisAlignedBoundingBox',
     onselect : function() {
         viewer.camera.position = Cesium.Cartesian3.clone(centerForAxisAligned, viewer.camera.position);
-        console.log(viewer.camera.position);
         viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
         viewer.camera.cameraLimiter.boundingObject = axisAligned;
         viewer.camera.cameraLimiter.minHeadingPitchRoll = undefined;
@@ -166,7 +164,6 @@ var options = [{
     text : 'OrientedBoundingBox',
     onselect : function() {
         Cesium.Cartesian3.clone(centerForOriented, viewer.camera.position);
-        console.log(viewer.camera.position);
         viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
         viewer.camera.cameraLimiter.boundingObject = oriented;
         viewer.camera.cameraLimiter.minHeadingPitchRoll = undefined;

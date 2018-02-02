@@ -99,10 +99,10 @@ define([
         }
 
         if (defined(limiter.boundingObject)) {
-            limiter.boundingObject.clone(result.boundingObject);
+            result.boundingObject = limiter.boundingObject.clone(result.boundingObject);
         }
-        HeadingPitchRoll.clone(limiter.minHeadingPitchRoll, result.minHeadingPitchRoll);
-        HeadingPitchRoll.clone(limiter.maxHeadingPitchRoll, result.maxHeadingPitchRoll);
+        result.minHeadingPitchRoll = HeadingPitchRoll.clone(limiter.minHeadingPitchRoll, result.minHeadingPitchRoll);
+        result.maxHeadingPitchRoll = HeadingPitchRoll.clone(limiter.maxHeadingPitchRoll, result.maxHeadingPitchRoll);
 
         return result;
     };
