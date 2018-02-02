@@ -15,7 +15,7 @@ define([
     'use strict';
 
     /**
-     * The CameraLimiter is used to limit a {@Camera}'s position (using a bounding object) and orientation (defined by {@HeadingPitchRange}.
+     * The CameraLimiter is used to limit a {@link Camera}'s position (using a bounding object) and orientation (defined by min and max values of {@link HeadingPitchRoll}).
      *
      * @alias CameraLimiter
      * @constructor
