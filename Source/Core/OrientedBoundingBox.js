@@ -425,7 +425,7 @@ define([
      * @private
      */
     OrientedBoundingBox.prototype.projectedPoint = function(position, boundingObject, result) {
-        position.clone(result);
+        result = position.clone(result);
         if (defined(boundingObject)) {
             // to avoid inverse of a zero matrix (since that doesn't exist).
             if (this.boundingObject.halfAxes.equals(Matrix3.ZERO)) {

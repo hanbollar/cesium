@@ -197,7 +197,7 @@ define([
      * @private
      */
     AxisAlignedBoundingBox.prototype.projectedPoint = function(position, boundingObject, result) {
-        position.clone(result);
+        result = position.clone(result);
         if (defined(boundingObject)) {
             Cartesian3.subtract(position, boundingObject.center, result);
             result.x = CesiumMath.clamp(result.x, boundingObject.minimum.x, boundingObject.maximum.x);
