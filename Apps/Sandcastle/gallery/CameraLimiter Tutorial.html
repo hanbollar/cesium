@@ -35,19 +35,15 @@ var scene = viewer.scene;
 viewer.terrainProvider = new Cesium.CesiumTerrainProvider({
     url : 'https://assets.agi.com/stk-terrain/v1/tilesets/world/tiles',
     requestVertexNormals : true
-});
+}); //-- causes black in 2d view if loaded and do zoom manipulations
 scene.globe.depthTestAgainstTerrain = true;
-
-// set up initial limiter
-viewer.camera.cameraLimiter = new Cesium.CameraLimiter();
-
 
 
 
 // Used for Bounding Sphere Height Example
 var centerForSphere = new Cesium.Cartesian3();
 var earthUniformRadius = Cesium.Ellipsoid.WGS84.radii.x;
-var maxHeight = 1500000;
+var maxHeight = 15000000;
 var radius = earthUniformRadius + maxHeight;
 
 // The Bounding Sphere
@@ -89,12 +85,12 @@ Cesium.Cartesian3.add(centerForAxisAligned, directionForAxisAligned, centerForAx
 // The Axis Aligned Box
 var axisAligned = new Cesium.AxisAlignedBoundingBox(minForAxisAligned, maxForAxisAligned, centerForAxisAligned);
 
-// View the Axis Aligned Bounding Box - NEEED A BETTERRR WWAAAYYY TO DRAWWW (bbox is correct - visual isnt oriented the way it is.)
+// View the Axis Aligned Bounding Box
 var outlineAxisBox = viewer.entities.add({
     name : 'Axis Aligned Box Outline',
     position: centerForAxisAligned,
     box : {
-        dimensions : new Cesium.Cartesian3(2*dimensionsForAxisAligned.x, 2*dimensionsForAxisAligned.y, 2*dimensionsForAxisAligned.z),
+        dimensions : new Cesium.Cartesian3(dimensionsForAxisAligned.x, dimensionsForAxisAligned.y, dimensionsForAxisAligned.z),
         fill : false,
         outline : true,
         outlineColor : Cesium.Color.RED
@@ -133,55 +129,68 @@ var outlineOrientedBox = viewer.entities.add({
         outlineColor : Cesium.Color.BLUE
     }
 });
-
+//
 
 
 
 // Used for HeadingPitchRoll Example
-var minHeadingPitchRollDef = new Cesium.HeadingPitchRoll(-Math.PI, -Math.PI/2.0, -Math.Infinity);
-var maxHeadingPitchRollDef = new Cesium.HeadingPitchRoll(Math.PI, Math.PI/2.0, Math.Infinity);
+var minHeadingPitchRollDef = new Cesium.HeadingPitchRoll(-Math.PI, -Math.PI/2.0, -Infinity);
+var maxHeadingPitchRollDef = new Cesium.HeadingPitchRoll(Math.PI, Math.PI/2.0, Infinity);
 
 
+
+// first initialization of the cameraLimiter
 viewer.camera.cameraLimiter = new Cesium.CameraLimiter({
     boundingObject: boundingSphere
 });
+var limiterDefined = true;
 
+// options for drop down
 var options = [{
     text : 'BoundingSphere',
     onselect : function() {
-        viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
-        viewer.camera.cameraLimiter.boundingObject = boundingSphere;
+        if (limiterDefined) {
+            viewer.camera.cameraLimiter.boundingObject = boundingSphere;
+            viewer.camera.cameraLimiter.minHeadingPitchRoll = undefined;
+            viewer.camera.cameraLimiter.maxHeadingPitchRoll = undefined;
+        }
     }
 }, {
     text : 'AxisAlignedBoundingBox',
     onselect : function() {
-        viewer.camera.position = Cesium.Cartesian3.clone(centerForAxisAligned, viewer.camera.position);
-        viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
-        viewer.camera.cameraLimiter.boundingObject = axisAligned;
+        if (limiterDefined) {
+            viewer.camera.cameraLimiter.boundingObject = axisAligned;
+            viewer.camera.cameraLimiter.minHeadingPitchRoll = undefined;
+            viewer.camera.cameraLimiter.maxHeadingPitchRoll = undefined;
+        }
     }
 }, {
     text : 'OrientedBoundingBox',
     onselect : function() {
-        Cesium.Cartesian3.clone(centerForOriented, viewer.camera.position);
-        viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
-        viewer.camera.cameraLimiter = oriented; //new Cesium.CameraLimiter({
-        //    boundingObject: oriented
-        // });
+        if (limiterDefined) {
+            viewer.camera.cameraLimiter.boundingObject = oriented;
+            viewer.camera.cameraLimiter.minHeadingPitchRoll = undefined;
+            viewer.camera.cameraLimiter.maxHeadingPitchRoll = undefined;
+        }
     }
 }, {
     text : 'HeadingPitchRoll',
     onselect : function() {
-        viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
-        viewer.camera.cameraLimiter.minHeadingPitchRoll = minHeadingPitchRollDef;
-        viewer.camera.cameraLimiter.maxHeadingPitchRoll = maxHeadingPitchRollDef;
+        if (limiterDefined) {
+            viewer.camera.cameraLimiter.boundingObject = undefined;
+            viewer.camera.cameraLimiter.minHeadingPitchRoll = minHeadingPitchRollDef;
+            viewer.camera.cameraLimiter.maxHeadingPitchRoll = maxHeadingPitchRollDef;
+        }
     }
 }];
 
 var saveCameraLimiter;
 Sandcastle.addToggleButton('Limiter On', viewer.camera.cameraLimiter, function(checked) {
     if (checked) {
+        limiterDefined = true;
         viewer.camera.cameraLimiter = Cesium.CameraLimiter.clone(saveCameraLimiter, new Cesium.CameraLimiter());
     } else {
+        limiterDefined = false;
         saveCameraLimiter = Cesium.CameraLimiter.clone(viewer.camera.cameraLimiter, new Cesium.CameraLimiter());
         viewer.camera.cameraLimiter = undefined;
     }
@@ -189,10 +198,6 @@ Sandcastle.addToggleButton('Limiter On', viewer.camera.cameraLimiter, function(c
 
 
 Sandcastle.addToolbarMenu(options);
-
-
-
-
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }

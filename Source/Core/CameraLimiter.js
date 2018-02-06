@@ -17,6 +17,10 @@ define([
     /**
      * The CameraLimiter is used to limit a {@link Camera}'s position (using a bounding object) and orientation (defined by min and max values of {@link HeadingPitchRoll}).
      *
+     * If set, the camera of this limiter will be constrained by location and viewing ability for moving and changes in the look vector.
+     * The camera ignores position and orientation limits in {@link SceneMode#SCENE2D} view.
+     * The camera ignores position and orientation limits are ignored in {@link SceneMode#COLUMBUS_VIEW} except for when its required to limit by a {@link BoundingSphere}.
+     *
      * @alias CameraLimiter
      * @constructor
      *
@@ -59,7 +63,7 @@ define([
         //>>includeEnd('debug');
 
         if (defined(this.boundingObject)) {
-            this.boundingObject.projectedPoint(position, this.boundingObject, result);
+            result = this.boundingObject.projectedPoint(position, this.boundingObject, result);
         }
         return result;
     };
@@ -73,16 +77,19 @@ define([
         Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
-        orientation.clone(result);
+        var minHPR = this.minHeadingPitchRoll;
+        var maxHPR = this.maxHeadingPitchRoll;
+
+        result = orientation.clone(result);
         if (defined(this.minHeadingPitchRoll)) {
-            result.heading = Math.max(this.minHeadingPitchRoll.heading, result.heading);
-            result.pitch = Math.max(this.minHeadingPitchRoll.pitch, result.pitch);
-            result.roll = Math.max(this.minHeadingPitchRoll.roll, result.roll);
+            result.heading = Math.max(minHPR.heading, orientation.heading);
+            result.pitch = Math.max(minHPR.pitch, orientation.pitch);
+            result.roll = Math.max(minHPR.roll, orientation.roll);
         }
         if (defined(this.maxHeadingPitchRoll)) {
-            result.heading = Math.min(this.maxHeadingPitchRoll.heading, result.heading);
-            result.pitch = Math.min(this.maxHeadingPitchRoll.pitch, result.pitch);
-            result.roll = Math.min(this.maxHeadingPitchRoll.roll, result.roll);
+            result.heading = Math.min(maxHPR.heading, orientation.heading);
+            result.pitch = Math.min(maxHPR.pitch, orientation.pitch);
+            result.roll = Math.min(maxHPR.roll, orientation.roll);
         }
         return result;
     };
@@ -97,7 +104,6 @@ define([
         if (!defined(result)) {
             result = new CameraLimiter();
         }
-
         if (defined(limiter.boundingObject)) {
             result.boundingObject = limiter.boundingObject.clone(result.boundingObject);
         }
