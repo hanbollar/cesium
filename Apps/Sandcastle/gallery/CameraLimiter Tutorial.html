@@ -47,17 +47,18 @@ viewer.camera.cameraLimiter = new Cesium.CameraLimiter();
 // Used for Bounding Sphere Height Example
 var centerForSphere = new Cesium.Cartesian3();
 var earthUniformRadius = Cesium.Ellipsoid.WGS84.radii.x;
-var rad = earthUniformRadius + 15000;
+var maxHeight = 1500000;
+var radius = earthUniformRadius + maxHeight;
 
 // The Bounding Sphere
-var boundingSphere = new Cesium.BoundingSphere(centerForSphere, rad);
+var boundingSphere = new Cesium.BoundingSphere(centerForSphere, radius);
 
 // View the Bounding Sphere
 var outlineSphere = viewer.entities.add({
     name : 'Bounding Sphere Outline',
     position: new Cesium.Cartesian3(0.01, 0.01, 0.01), // errors if 0,0,0
     ellipsoid : {
-        radii : new Cesium.Cartesian3(rad, rad, rad),
+        radii : new Cesium.Cartesian3(radius, radius, radius),
         fill : false,
         outline : true,
         outlineColor : Cesium.Color.YELLOW,
@@ -93,7 +94,7 @@ var outlineAxisBox = viewer.entities.add({
     name : 'Axis Aligned Box Outline',
     position: centerForAxisAligned,
     box : {
-        dimensions : new Cesium.Cartesian3(dimensionsForAxisAligned.x, dimensionsForAxisAligned.y, dimensionsForAxisAligned.z),
+        dimensions : new Cesium.Cartesian3(2*dimensionsForAxisAligned.x, 2*dimensionsForAxisAligned.y, 2*dimensionsForAxisAligned.z),
         fill : false,
         outline : true,
         outlineColor : Cesium.Color.RED
@@ -137,19 +138,19 @@ var outlineOrientedBox = viewer.entities.add({
 
 
 // Used for HeadingPitchRoll Example
-var minHeadingPitchRollDef = new Cesium.HeadingPitchRoll(-10, 5, 15);
-var maxHeadingPitchRollDef = new Cesium.HeadingPitchRoll(25, 30, 20);
+var minHeadingPitchRollDef = new Cesium.HeadingPitchRoll(-Math.PI, -Math.PI/2.0, -Math.Infinity);
+var maxHeadingPitchRollDef = new Cesium.HeadingPitchRoll(Math.PI, Math.PI/2.0, Math.Infinity);
 
 
-
+viewer.camera.cameraLimiter = new Cesium.CameraLimiter({
+    boundingObject: boundingSphere
+});
 
 var options = [{
     text : 'BoundingSphere',
     onselect : function() {
         viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
         viewer.camera.cameraLimiter.boundingObject = boundingSphere;
-        viewer.camera.cameraLimiter.minHeadingPitchRoll = undefined;
-        viewer.camera.cameraLimiter.maxHeadingPitchRoll = undefined;
     }
 }, {
     text : 'AxisAlignedBoundingBox',
@@ -157,41 +158,41 @@ var options = [{
         viewer.camera.position = Cesium.Cartesian3.clone(centerForAxisAligned, viewer.camera.position);
         viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
         viewer.camera.cameraLimiter.boundingObject = axisAligned;
-        viewer.camera.cameraLimiter.minHeadingPitchRoll = undefined;
-        viewer.camera.cameraLimiter.maxHeadingPitchRoll = undefined;
     }
 }, {
     text : 'OrientedBoundingBox',
     onselect : function() {
         Cesium.Cartesian3.clone(centerForOriented, viewer.camera.position);
         viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
-        viewer.camera.cameraLimiter.boundingObject = oriented;
-        viewer.camera.cameraLimiter.minHeadingPitchRoll = undefined;
-        viewer.camera.cameraLimiter.maxHeadingPitchRoll = undefined;
+        viewer.camera.cameraLimiter = oriented; //new Cesium.CameraLimiter({
+        //    boundingObject: oriented
+        // });
     }
 }, {
     text : 'HeadingPitchRoll',
     onselect : function() {
         viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
-        viewer.camera.cameraLimiter.boundingObject = undefined;
         viewer.camera.cameraLimiter.minHeadingPitchRoll = minHeadingPitchRollDef;
         viewer.camera.cameraLimiter.maxHeadingPitchRoll = maxHeadingPitchRollDef;
     }
-}, {
-    text : 'No Bounds',
-    onselect : function() {
-        viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
-        viewer.camera.cameraLimiter.boundingObject = undefined;
-        viewer.camera.cameraLimiter.minHeadingPitchRoll = undefined;
-        viewer.camera.cameraLimiter.maxHeadingPitchRoll = undefined;
-    }
 }];
+
+var saveCameraLimiter;
+Sandcastle.addToggleButton('Limiter On', viewer.camera.cameraLimiter, function(checked) {
+    if (checked) {
+        viewer.camera.cameraLimiter = Cesium.CameraLimiter.clone(saveCameraLimiter, new Cesium.CameraLimiter());
+    } else {
+        saveCameraLimiter = Cesium.CameraLimiter.clone(viewer.camera.cameraLimiter, new Cesium.CameraLimiter());
+        viewer.camera.cameraLimiter = undefined;
+    }
+});
+
 
 Sandcastle.addToolbarMenu(options);
 
 
 
-viewer.camera.cameraLimiter = new Cesium.CameraLimiter(options);
+
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }
