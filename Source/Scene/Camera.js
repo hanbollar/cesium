@@ -957,11 +957,11 @@ define([
             frustum.bottom = -frustum.top;
         }
 
-        //limitOrientation(this);
         limitPosition(this);
-
         if (this._mode === SceneMode.SCENE2D) {
             clampMove2D(this, this.position);
+        } else {
+            limitOrientation(this);
         }
         var globe = this._scene.globe;
         var globeFinishedUpdating = !defined(globe) || (globe._surface.tileProvider.ready && globe._surface._tileLoadQueueHigh.length === 0 && globe._surface._tileLoadQueueMedium.length === 0 && globe._surface._tileLoadQueueLow.length === 0 && globe._surface._debug.tilesWaitingForChildren === 0);
@@ -3249,7 +3249,7 @@ define([
 
     var scratchOrientation = new HeadingPitchRoll(0, 0, 0);
 
-    Camera.limitOrientation(camera) {
+    function limitOrientation(camera) {
         // modifies this camera directly
         if (defined(camera.cameraLimiter)
             && (defined(camera.cameraLimiter.minHeadingPitchRoll) || defined(camera.cameraLimiter.maxHeadingPitchRoll))) {
@@ -3267,7 +3267,7 @@ define([
         }
     }
 
-    Camera.limitPosition(camera) {
+    function limitPosition(camera) {
         // modifies this camera directly
 
         if (defined(camera.cameraLimiter) && defined(camera.cameraLimiter.boundingObject)) {
