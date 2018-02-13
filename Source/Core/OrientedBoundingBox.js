@@ -422,32 +422,39 @@ define([
     var scratchMatrix3 = new Matrix3();
 
     /**
-     * @private
+     * If the given position is not already within the box, projects the given position onto the box.
+     * 
+     * @param {Cartesian3} position The position being projected onto this OrientedBoundingBox.
+     * @returns {Cartesian3} A projected version of the inputted position if it was not originally within the OrientedBoundingBox.
      */
-    OrientedBoundingBox.prototype.projectedPoint = function(position, boundingObject, result) {
+    OrientedBoundingBox.prototype.projectedPoint = function(position, result) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.defined('position', position);
+        //>>includeEnd('debug');
+        
         result = position.clone(result);
-        if (defined(boundingObject)) {
-            // to avoid inverse of a zero matrix (since that doesn't exist).
-            if (this.boundingObject.halfAxes.equals(Matrix3.ZERO)) {
-                result.x = 0.0;
-                result.y = 0.0;
-                result.z = 0.0;
-                return result;
-            }
-
-            // convert world space positionToCheck to orientedBoundingBox's object space.
-            var inverseTransformationMatrix = Matrix3.inverse(boundingObject.halfAxes, scratchMatrix3);
-            var positionInObjectSpace = Matrix3.multiplyByVector(inverseTransformationMatrix, result, scratchMatrix3);
-
-            // once in object space just translate to center and check if converted location is within axis oriented 2x2x2 cube (bc half axes)
-            Cartesian3.subtract(result, boundingObject.center, result);
-            result.x = CesiumMath.clamp(result.x, -1.0, 1.0);
-            result.y = CesiumMath.clamp(result.y, -1.0, 1.0);
-            result.z = CesiumMath.clamp(result.z, -1.0, 1.0);
-            Cartesian3.add(position, boundingObject.center, result);
-
-            Matrix3.multiplyByVector(boundingObject.halfAxes, positionInObjectSpace, result);
+        
+        // to avoid inverse of a zero matrix (since that doesn't exist).
+        if (this.halfAxes.equals(Matrix3.ZERO)) {
+            result.x = 0.0;
+            result.y = 0.0;
+            result.z = 0.0;
+            return result;
         }
+
+        // convert world space positionToCheck to orientedBoundingBox's object space.
+        var inverseTransformationMatrix = Matrix3.inverse(this.halfAxes, scratchMatrix3);
+        var positionInObjectSpace = Matrix3.multiplyByVector(inverseTransformationMatrix, result, scratchMatrix3);
+
+        // once in object space just translate to center and check if converted location is within axis oriented 2x2x2 cube (bc half axes)
+        Cartesian3.subtract(result, this.center, result);
+        result.x = CesiumMath.clamp(result.x, -1.0, 1.0);
+        result.y = CesiumMath.clamp(result.y, -1.0, 1.0);
+        result.z = CesiumMath.clamp(result.z, -1.0, 1.0);
+        Cartesian3.add(position, this.center, result);
+
+        Matrix3.multiplyByVector(this.halfAxes, positionInObjectSpace, result);
+        
         return result;
     };
 

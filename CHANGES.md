@@ -6,6 +6,8 @@ Change Log
 ##### Fixes :wrench:
 * Fixed bug where AxisAlignedBoundingBox did not copy over center value when cloning an undefined result. [#6183](https://github.com/AnalyticalGraphicsInc/cesium/pull/6183)
 * Fixed `Resource.fetch` when called with no arguments [#6206](https://github.com/AnalyticalGraphicsInc/cesium/issues/6206)
+* Fixed discrepancy between default value used and commented value for default value for halfAxes of OrientedBoundingBox. [#6147](https://github.com/AnalyticalGraphicsInc/cesium/pull/6147)
+* Added CameraLimiter class to aid in restricting of camera movement [#4802](https://github.com/AnalyticalGraphicsInc/cesium/issues/4802)
 
 ### 1.42.1 - 2018-02-01
 _This is an npm-only release to fix an issue with using Cesium in Node.js.__
@@ -70,14 +72,11 @@ _This is an npm-only release to fix an issue with using Cesium in Node.js.__
 * Improved Particle System Sandcastle example for better visual. [#6132](https://github.com/AnalyticalGraphicsInc/cesium/pull/6132)
 * Fixed behavior of `Camera.move*` and `Camera.look*` functions in 2D mode. [#5884](https://github.com/AnalyticalGraphicsInc/cesium/issues/5884)
 * Fixed `Camera.moveStart` and `Camera.moveEnd` events not being raised when camera is close to the ground. [#4753](https://github.com/AnalyticalGraphicsInc/cesium/issues/4753)
-* Fixed discrepancy between default value used and commented value for default value for halfAxes of OrientedBoundingBox. [#6147](https://github.com/AnalyticalGraphicsInc/cesium/pull/6147)
-* Added CameraLimiter class to aid in restricting of camera movement [#4802](https://github.com/AnalyticalGraphicsInc/cesium/issues/4802)
 * Added `Cartographic.toCartesian` to convert from Cartographic to Cartesian3. [#6163](https://github.com/AnalyticalGraphicsInc/cesium/pull/6163)
 * Added geometric-error-based point cloud attenuation and eye dome lighting for point clouds using replacement refinement. [#6069](https://github.com/AnalyticalGraphicsInc/cesium/pull/6069)
 * Added `BoundingSphere.volume` for computing the volume of a `BoundingSphere`. [#6069](https://github.com/AnalyticalGraphicsInc/cesium/pull/6069)
 * Fixed `OrientedBoundingBox` documentation. [#6147](https://github.com/AnalyticalGraphicsInc/cesium/pull/6147)
 * Updated documentation links to reflect new locations on `https://cesiumjs.org` and `https://cesium.com`.
-* Updated documentation for AxisAlignedBoundingBox and OrientedBoundingBox.
 ### 1.41 - 2018-01-02
 
 * Breaking changes

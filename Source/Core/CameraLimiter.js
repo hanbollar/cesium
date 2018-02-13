@@ -18,8 +18,7 @@ define([
      * The CameraLimiter is used to limit a {@link Camera}'s position (using a bounding object) and orientation (defined by min and max values of {@link HeadingPitchRoll}).
      *
      * If set, the camera of this limiter will be constrained by location and viewing ability for moving and changes in the look vector.
-     * The camera ignores position and orientation limits in {@link SceneMode#SCENE2D} view.
-     * The camera ignores position and orientation limits are ignored in {@link SceneMode#COLUMBUS_VIEW} except for when its required to limit by a {@link BoundingSphere}.
+     * The camera ignores position and orientation limits in {@link SceneMode#SCENE2D} view and {@link SceneMode#COLUMBUS_VIEW}.
      *
      * @alias CameraLimiter
      * @constructor
@@ -32,7 +31,7 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         /**
-         * The BoundingObject.
+         * The BoundingObject. Used to restrict camera positions of the {@link Camera} holding this CameraLimiter.
          * @type {AxisAlignedBoundingBox|BoundingSphere|OrientedBoundingBox}
          * @default undefined
          */
@@ -41,14 +40,12 @@ define([
         /**
          * The minimum orientation values.
          * @type {HeadingPitchRoll}
-         * @default undefined
          */
         this.minHeadingPitchRoll = HeadingPitchRoll.clone(options.minimumHeadingPitchRoll);
 
         /**
          * The maximum orientation values.
          * @type {HeadingPitchRoll}
-         * @default undefined
          */
         this.maxHeadingPitchRoll = HeadingPitchRoll.clone(options.maximumHeadingPitchRoll);
     }
@@ -103,6 +100,9 @@ define([
     CameraLimiter.clone = function(limiter, result) {
         if (!defined(result)) {
             result = new CameraLimiter();
+        }
+        if (!defined(limiter)) {
+            return result;
         }
         if (defined(limiter.boundingObject)) {
             result.boundingObject = limiter.boundingObject.clone(result.boundingObject);

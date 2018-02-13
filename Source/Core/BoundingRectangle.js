@@ -6,7 +6,6 @@ define([
         './defined',
         './GeographicProjection',
         './Intersect',
-        './Math',
         './Rectangle'
     ], function(
         Cartesian2,
@@ -16,7 +15,6 @@ define([
         defined,
         GeographicProjection,
         Intersect,
-        CesiumMath,
         Rectangle) {
     'use strict';
 

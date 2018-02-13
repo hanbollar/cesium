@@ -1199,29 +1199,36 @@ define([
     };
 
     /**
-     * @private
+     * If the given position is not already within the sphere, projects the given position onto the sphere.
+     * 
+     * @param {Cartesian3} position The position being projected onto this BoundingSphere.
+     * @returns {Cartesian3} A projected version of the inputted position if it was not originally within the BoundingSphere.
      */
-    BoundingSphere.prototype.projectedPoint = function(position, boundingObject, result) {
+    BoundingSphere.prototype.projectedPoint = function(position, result) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.defined('position', position);
+        //>>includeEnd('debug');
+        
         result = position.clone(result);
-        if (defined(boundingObject)) {
-            var center = boundingObject.center;
-            var radius = boundingObject.radius;
 
-            // to avoid dividing by zero check if same location as center
-            if (result.equals(center)) {
-                return result;
-            }
-            // check if already within sphere
-            if (Cartesian3.distance(result, center) <= radius) {
-                return result;
-            }
+        var center = this.center;
+        var radius = this.radius;
 
-            Cartesian3.subtract(result, center, result);
-            Cartesian3.normalize(result, result);
-            Cartesian3.multiplyByScalar(result, radius, result);
-
-            Cartesian3.add(result, center, result);
+        // to avoid dividing by zero check if same location as center
+        if (result.equals(center)) {
+            return result;
         }
+        // check if already within sphere
+        if (Cartesian3.distance(result, center) <= radius) {
+            return result;
+        }
+
+        Cartesian3.subtract(result, center, result);
+        Cartesian3.normalize(result, result);
+        Cartesian3.multiplyByScalar(result, radius, result);
+
+        Cartesian3.add(result, center, result);
+    
         return result;
     };
 

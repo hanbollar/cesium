@@ -194,17 +194,24 @@ define([
     };
 
     /**
-     * @private
+     * If the given position is not already within the box, projects the given position onto the box.
+     * 
+     * @param {Cartesian3} position The position being projected onto this AxisAlignedBoundingBox.
+     * @returns {Cartesian3} A projected version of the inputted position if it was not originally within the AxisAlignedBoundingBox.
      */
-    AxisAlignedBoundingBox.prototype.projectedPoint = function(position, boundingObject, result) {
+    AxisAlignedBoundingBox.prototype.projectedPoint = function(position, result) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.defined('position', position);
+        //>>includeEnd('debug');
+
         result = position.clone(result);
-        if (defined(boundingObject)) {
-            Cartesian3.subtract(position, boundingObject.center, result);
-            result.x = CesiumMath.clamp(result.x, boundingObject.minimum.x, boundingObject.maximum.x);
-            result.y = CesiumMath.clamp(result.y, boundingObject.minimum.y, boundingObject.maximum.y);
-            result.z = CesiumMath.clamp(result.z, boundingObject.minimum.z, boundingObject.maximum.z);
-            Cartesian3.add(result, boundingObject.center, result);
-        }
+
+        Cartesian3.subtract(position, this.center, result);
+        result.x = CesiumMath.clamp(result.x, this.minimum.x, this.maximum.x);
+        result.y = CesiumMath.clamp(result.y, this.minimum.y, this.maximum.y);
+        result.z = CesiumMath.clamp(result.z, this.minimum.z, this.maximum.z);
+        Cartesian3.add(result, this.center, result);
+        
         return result;
     };
 

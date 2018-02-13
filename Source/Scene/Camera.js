@@ -238,8 +238,7 @@ define([
 
         /**
          * If set, the camera will be constrained by location and viewing ability for moving and changes in the look vector.
-         * Position and orientation limits are ignored in {@link SceneMode#SCENE2D} view.
-         * Position and orientation limits are ignored in {@link SceneMode#COLUMBUS_VIEW} except for when its required to limit by a {@link BoundingSphere}.
+         * Position and orientation limits are ignored in {@link SceneMode#SCENE2D} view and {@link SceneMode#COLUMBUS_VIEW}.
          * @type {CameraLimiter}
          */
         this.cameraLimiter = undefined;
@@ -970,8 +969,6 @@ define([
             this._suspendTerrainAdjustment = !globeFinishedUpdating;
         }
         this._adjustHeightForTerrain();
-
-
     };
 
     var setTransformPosition = new Cartesian3();
@@ -3245,6 +3242,8 @@ define([
         Matrix4.clone(camera._transform, result.transform);
         result._transformChanged = true;
 
+        CameraLimiter.clone(camera.cameraLimiter, result.cameraLimiter);
+
         return result;
     };
 
@@ -3252,22 +3251,17 @@ define([
 
     function limitOrientation(camera) {
         // modifies this camera directly
-        if (defined(camera.cameraLimiter) &&
-            (defined(camera.cameraLimiter.minHeadingPitchRoll) || defined(camera.cameraLimiter.maxHeadingPitchRoll)) ) {
+        if (defined(camera.cameraLimiter) && camera._mode === SceneMode.SCENE3D){
+            // copy camera's hpr values
+            scratchOrientation.heading = camera.heading;
+            scratchOrientation.pitch = camera.pitch;
+            scratchOrientation.roll = camera.roll;
 
-            // check orientation
-            if (camera._mode === SceneMode.SCENE3D) {
-                // copy camera's hpr values
-                scratchOrientation.heading = camera.heading;
-                scratchOrientation.pitch = camera.pitch;
-                scratchOrientation.roll = camera.roll;
+            // update orientation
+            scratchOrientation = camera.cameraLimiter.limitOrientation(scratchOrientation, scratchOrientation);
 
-                var testingOrientation = HeadingPitchRoll.clone(scratchOrientation, scratchOrientation);
-                testingOrientation = camera.cameraLimiter.limitOrientation(scratchOrientation, testingOrientation);
-
-                // convert camera's orientation to this new orientation
-                setView3D(camera, camera.position, testingOrientation);
-            }
+            // convert camera's orientation to this new orientation
+            setView3D(camera, camera.position, scratchOrientation);
         }
     }
 
@@ -3276,25 +3270,17 @@ define([
     function limitPosition(camera) {
         // following the convention from _adjustHeightForTerrain to maintain correct orientation
         // before and after position is changed
-        if (defined(camera.cameraLimiter) && defined(camera.cameraLimiter.boundingObject)) {
+        if (defined(camera.cameraLimiter) && camera._mode === SceneMode.SCENE3D) {
+            // store camera's hpr values
+            saveOrientation.heading = camera.heading;
+            saveOrientation.pitch = camera.pitch;
+            saveOrientation.roll = camera.roll;
 
-            // check position
-            if (camera._mode === SceneMode.SCENE3D
-                || (camera._mode === SceneMode.COLUMBUS_VIEW && camera.cameraLimiter.boundingObject instanceof BoundingSphere)) {
+            // update position
+            camera.position = camera.cameraLimiter.limitPosition(camera.position, camera.position);
 
-                // store prev orientation;
-                saveOrientation.heading = camera.heading;
-                saveOrientation.pitch = camera.pitch;
-                saveOrientation.roll = camera.roll;
-
-                camera.position = camera.cameraLimiter.limitPosition(camera.position, camera.position);
-
-                if (camera._mode === SceneMode.COLUMBUS_VIEW) {
-                    setViewCV(camera, camera.position, saveOrientation, true);
-                } else {
-                    setView3D(camera, camera.position, saveOrientation);
-                }
-            }
+            // convert camera's orientation back to original orientation
+            setView3D(camera, camera.position, saveOrientation);
         }
     }
 
