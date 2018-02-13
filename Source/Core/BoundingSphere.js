@@ -1200,7 +1200,6 @@ define([
 
     /**
      * If the given position is not already within the sphere, projects the given position onto the sphere.
-     * 
      * @param {Cartesian3} position The position being projected onto this BoundingSphere.
      * @returns {Cartesian3} A projected version of the inputted position if it was not originally within the BoundingSphere.
      */
@@ -1208,7 +1207,6 @@ define([
         //>>includeStart('debug', pragmas.debug);
         Check.defined('position', position);
         //>>includeEnd('debug');
-        
         result = position.clone(result);
 
         var center = this.center;
@@ -1228,7 +1226,6 @@ define([
         Cartesian3.multiplyByScalar(result, radius, result);
 
         Cartesian3.add(result, center, result);
-    
         return result;
     };
 

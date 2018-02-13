@@ -423,7 +423,6 @@ define([
 
     /**
      * If the given position is not already within the box, projects the given position onto the box.
-     * 
      * @param {Cartesian3} position The position being projected onto this OrientedBoundingBox.
      * @returns {Cartesian3} A projected version of the inputted position if it was not originally within the OrientedBoundingBox.
      */
@@ -431,9 +430,7 @@ define([
         //>>includeStart('debug', pragmas.debug);
         Check.defined('position', position);
         //>>includeEnd('debug');
-        
         result = position.clone(result);
-        
         // to avoid inverse of a zero matrix (since that doesn't exist).
         if (this.halfAxes.equals(Matrix3.ZERO)) {
             result.x = 0.0;
@@ -454,7 +451,6 @@ define([
         Cartesian3.add(position, this.center, result);
 
         Matrix3.multiplyByVector(this.halfAxes, positionInObjectSpace, result);
-        
         return result;
     };
 

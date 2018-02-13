@@ -194,8 +194,7 @@ define([
     };
 
     /**
-     * If the given position is not already within the box, projects the given position onto the box.
-     * 
+     * If the given position is not already within the box, projects the given position onto the box
      * @param {Cartesian3} position The position being projected onto this AxisAlignedBoundingBox.
      * @returns {Cartesian3} A projected version of the inputted position if it was not originally within the AxisAlignedBoundingBox.
      */
@@ -211,7 +210,7 @@ define([
         result.y = CesiumMath.clamp(result.y, this.minimum.y, this.maximum.y);
         result.z = CesiumMath.clamp(result.z, this.minimum.z, this.maximum.z);
         Cartesian3.add(result, this.center, result);
-        
+
         return result;
     };
 
