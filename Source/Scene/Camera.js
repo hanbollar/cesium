@@ -3248,6 +3248,7 @@ define([
     };
 
     var scratchOrientation = new HeadingPitchRoll(0, 0, 0);
+    var scratchPosition = new Cartesian3(0, 0, 0);
 
     function limitOrientation(camera) {
         // modifies this camera directly
@@ -3256,9 +3257,10 @@ define([
             scratchOrientation.heading = camera.heading;
             scratchOrientation.pitch = camera.pitch;
             scratchOrientation.roll = camera.roll;
+            scratchPosition = camera.position.clone(scratchPosition);
 
             // update orientation
-            scratchOrientation = camera.cameraLimiter.limitOrientation(scratchOrientation, scratchOrientation);
+            scratchOrientation = camera.cameraLimiter.limitOrientation(scratchOrientation, scratchPosition, scratchOrientation);
 
             // convert camera's orientation to this new orientation
             setView3D(camera, camera.position, scratchOrientation);

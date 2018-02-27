@@ -5,13 +5,19 @@ define([
     '../Core/defined',
     '../Core/HeadingPitchRoll',
     '../Core/Math',
-    '../Core/Matrix3'
+    '../Core/Matrix4',
+    '../Core/Quaternion',
+    '../Core/Transforms'
 ], function(
     Cartesian3,
     Check,
     defaultValue,
     defined,
-    HeadingPitchRoll) {
+    HeadingPitchRoll,
+    Math,
+    Matrix4,
+    Quaternion,
+    Transforms) {
     'use strict';
 
     /**
@@ -68,16 +74,21 @@ define([
     /**
      * @private
      */
-    CameraLimiter.prototype.limitOrientation = function(orientation, result) {
+    CameraLimiter.prototype.limitOrientation = function(orientation, position, result) {
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.object('orientation', orientation);
         Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
+        var quat = Quaternion.fromHeadingPitchRoll(orientation);
+        var transform = Transforms.headingPitchRollToFixedFrame(position, orientation);
+        var quatResult = Quaternion.fromRotationMatrix(Matrix4.getRotation(transform));
+        Quaternion.multiply(quatResult, quat, quatResult);
+        result = HeadingPitchRoll.fromQuaternion(quatResult);
+
         var minHPR = this.minHeadingPitchRoll;
         var maxHPR = this.maxHeadingPitchRoll;
 
-        result = orientation.clone(result);
         if (defined(this.minHeadingPitchRoll)) {
             result.heading = Math.max(minHPR.heading, orientation.heading);
             result.pitch = Math.max(minHPR.pitch, orientation.pitch);
