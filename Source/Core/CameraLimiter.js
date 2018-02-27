@@ -60,7 +60,7 @@ define([
         //>>includeEnd('debug');
 
         if (defined(this.boundingObject)) {
-            result = this.boundingObject.projectedPoint(position, this.boundingObject, result);
+            result = this.boundingObject.projectedPoint(position, result);
         }
         return result;
     };
