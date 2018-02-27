@@ -58,38 +58,16 @@ define([
      * @private
      */
     CameraLimiter.prototype.limitPosition = function(position, result) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object('position', position);
-        Check.typeOf.object('result', result);
-        //>>includeEnd('debug');
-
         if (defined(this.boundingObject)) {
             result = this.boundingObject.projectedPoint(position, result);
         }
         return result;
     };
 
-    var scratchMatrix4 = new Matrix4();
     /**
      * @private
      */
-    CameraLimiter.prototype.limitOrientation = function(orientation, position, result) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object('orientation', orientation);
-        Check.typeOf.object('result', result);
-        //>>includeEnd('debug');
-
-        if (!defined(this.minHeadingPitchRoll) && !defined(this.maxHeadingPitchRoll)) {
-            result = orientation;
-            return result;
-        }
-
-        var quat = Quaternion.fromHeadingPitchRoll(orientation);
-        var transform = Transforms.headingPitchRollToFixedFrame(position, orientation);
-        var quatResult = Quaternion.fromRotationMatrix(Matrix4.getRotation(transform, scratchMatrix4));
-        Quaternion.multiply(quatResult, quat, quatResult);
-        result = HeadingPitchRoll.fromQuaternion(quatResult);
-
+    CameraLimiter.prototype.limitOrientation = function(orientation, result) {
         var minHPR = this.minHeadingPitchRoll;
         var maxHPR = this.maxHeadingPitchRoll;
 

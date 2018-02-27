@@ -3248,7 +3248,7 @@ define([
     };
 
     var scratchOrientation = new HeadingPitchRoll(0, 0, 0);
-    var scratchPosition = new Cartesian3(0, 0, 0);
+    var scratchMatrix4 = new Matrix4();
 
     function limitOrientation(camera) {
         // modifies this camera directly
@@ -3257,10 +3257,23 @@ define([
             scratchOrientation.heading = camera.heading;
             scratchOrientation.pitch = camera.pitch;
             scratchOrientation.roll = camera.roll;
-            scratchPosition = camera.position.clone(scratchPosition);
+
+            // convert orientation to local space of camera
+            var quat = Quaternion.fromHeadingPitchRoll(scratchOrientation);
+            var transform = Transforms.headingPitchRollToFixedFrame(camera.position, scratchOrientation);
+            var quatResult = Quaternion.fromRotationMatrix(Matrix4.getRotation(transform, scratchMatrix4));
+            Quaternion.multiply(quatResult, quat, quatResult);
+            scratchOrientation = HeadingPitchRoll.fromQuaternion(quatResult);
 
             // update orientation
-            scratchOrientation = camera.cameraLimiter.limitOrientation(scratchOrientation, scratchPosition, scratchOrientation);
+            scratchOrientation = camera.cameraLimiter.limitOrientation(scratchOrientation, scratchOrientation);
+
+            // convert back to global space
+            quat = Quaternion.fromHeadingPitchRoll(scratchOrientation);
+            transform = Matrix4.inverse(transform, transform);
+            quatResult = Quaternion.fromRotationMatrix(Matrix4.getRotation(transform, scratchMatrix4));
+            Quaternion.multiply(quatResult, quat, quatResult);
+            scratchOrientation = HeadingPitchRoll.fromQuaternion(quatResult);
 
             // convert camera's orientation to this new orientation
             setView3D(camera, camera.position, scratchOrientation);
