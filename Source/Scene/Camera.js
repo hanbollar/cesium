@@ -3276,7 +3276,11 @@ define([
             scratchOrientation = HeadingPitchRoll.fromQuaternion(quatResult);
 
             // convert camera's orientation to this new orientation
-            setView3D(camera, camera.position, scratchOrientation);
+            var options = {
+                destination : camera.position,
+                orientation : scratchOrientation
+            };
+            camera.setView(options);
         }
     }
 
@@ -3295,7 +3299,11 @@ define([
             camera.position = camera.cameraLimiter.limitPosition(camera.position, camera.position);
 
             // convert camera's orientation back to original orientation
-            setView3D(camera, camera.position, saveOrientation);
+            var options = {
+                destination : camera.position,
+                orientation : saveOrientation
+            };
+            camera.setView(options);
         }
     }
 
