@@ -4,7 +4,6 @@ define([
     '../Core/defaultValue',
     '../Core/defined',
     '../Core/HeadingPitchRoll',
-    '../Core/Math',
     '../Core/Matrix4',
     '../Core/Quaternion',
     '../Core/Transforms'
@@ -14,7 +13,6 @@ define([
     defaultValue,
     defined,
     HeadingPitchRoll,
-    Math,
     Matrix4,
     Quaternion,
     Transforms) {
@@ -71,6 +69,7 @@ define([
         return result;
     };
 
+    var scratchMatrix4 = new Matrix4();
     /**
      * @private
      */
@@ -80,9 +79,14 @@ define([
         Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
+        if (!defined(this.minHeadingPitchRoll) && !defined(this.maxHeadingPitchRoll)) {
+            result = orientation;
+            return result;
+        }
+
         var quat = Quaternion.fromHeadingPitchRoll(orientation);
         var transform = Transforms.headingPitchRollToFixedFrame(position, orientation);
-        var quatResult = Quaternion.fromRotationMatrix(Matrix4.getRotation(transform));
+        var quatResult = Quaternion.fromRotationMatrix(Matrix4.getRotation(transform, scratchMatrix4));
         Quaternion.multiply(quatResult, quat, quatResult);
         result = HeadingPitchRoll.fromQuaternion(quatResult);
 
