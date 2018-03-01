@@ -3280,6 +3280,7 @@ define([
                 destination : camera.position,
                 orientation : scratchOrientation
             };
+            camera.percentageChanged = 0;
             camera.setView(options);
         }
     }

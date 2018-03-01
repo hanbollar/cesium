@@ -4,18 +4,14 @@ define([
     '../Core/defaultValue',
     '../Core/defined',
     '../Core/HeadingPitchRoll',
-    '../Core/Matrix4',
-    '../Core/Quaternion',
-    '../Core/Transforms'
+    '../Core/Math'
 ], function(
     Cartesian3,
     Check,
     defaultValue,
     defined,
     HeadingPitchRoll,
-    Matrix4,
-    Quaternion,
-    Transforms) {
+    CesiumMath) {
     'use strict';
 
     /**
@@ -68,18 +64,31 @@ define([
      * @private
      */
     CameraLimiter.prototype.limitOrientation = function(orientation, result) {
+        // giving the values an offset of EPSILON3 when checking to prevent jitter when close to actual value
         var minHPR = this.minHeadingPitchRoll;
         var maxHPR = this.maxHeadingPitchRoll;
 
         if (defined(this.minHeadingPitchRoll)) {
-            result.heading = Math.max(minHPR.heading, orientation.heading);
-            result.pitch = Math.max(minHPR.pitch, orientation.pitch);
-            result.roll = Math.max(minHPR.roll, orientation.roll);
+           // if (Math.abs(minHPR.heading - orientation.heading) > CesiumMath.EPSILON6) {
+                result.heading = Math.max(minHPR.heading + CesiumMath.EPSILON6, orientation.heading);
+           // }
+           // if (Math.abs(minHPR.pitch - orientation.pitch) > CesiumMath.EPSILON6) {
+                result.pitch = Math.max(minHPR.pitch + CesiumMath.EPSILON6, orientation.pitch);
+           // }
+           // if (Math.abs(minHPR.roll - orientation.roll) > CesiumMath.EPSILON6) {
+                result.roll = Math.max(minHPR.roll + CesiumMath.EPSILON6, orientation.roll);
+            //}
         }
         if (defined(this.maxHeadingPitchRoll)) {
-            result.heading = Math.min(maxHPR.heading, orientation.heading);
-            result.pitch = Math.min(maxHPR.pitch, orientation.pitch);
-            result.roll = Math.min(maxHPR.roll, orientation.roll);
+           // if (Math.abs(maxHPR.heading - orientation.heading) > CesiumMath.EPSILON6) {
+                result.heading = Math.min(maxHPR.heading - CesiumMath.EPSILON6, orientation.heading);
+           // }
+            //if (Math.abs(maxHPR.pitch - orientation.pitch) > CesiumMath.EPSILON6) {
+                result.pitch = Math.min(maxHPR.pitch - CesiumMath.EPSILON6, orientation.pitch);
+           //}
+            //if (Math.abs(maxHPR.roll - orientation.roll) > CesiumMath.EPSILON6) {
+                result.roll = Math.min(maxHPR.roll - CesiumMath.EPSILON6, orientation.roll);
+            //}
         }
         return result;
     };
